@@ -1,10 +1,11 @@
-from config import Config
-
-from rich.console import Console
-from typing import Dict, List
-import irc.bot
-from commands import commands_factory, send_message
 import re
+from typing import Dict, List
+
+import irc.bot
+from rich.console import Console
+
+from commands import commands_factory, send_message
+from config import Config
 
 console = Console()
 

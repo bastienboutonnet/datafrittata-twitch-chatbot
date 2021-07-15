@@ -1,7 +1,8 @@
 import logging
-from irc.client import ServerConnection
-from typing import Dict, Optional
 from abc import ABC
+from typing import Dict, Optional, Type
+
+from irc.client import ServerConnection
 
 TODAY: str = ""
 
@@ -65,7 +66,7 @@ class SetTodayCommand(BaseCommand):
         logging.info("Today has been set")
 
 
-AVAILABLE_COMMANDS: Dict[str, BaseCommand] = {
+AVAILABLE_COMMANDS: Dict[str, Type[BaseCommand]] = {
     "hello": SayHelloCommand,  # type: ignore
     "commands": ListCommandsCommand,
     "today": TodayCommand,
@@ -73,7 +74,7 @@ AVAILABLE_COMMANDS: Dict[str, BaseCommand] = {
 }
 
 
-def commands_factory(command_name: str) -> Optional[BaseCommand]:
+def commands_factory(command_name: str) -> Optional[Type[BaseCommand]]:
     try:
         return AVAILABLE_COMMANDS[command_name]
     except KeyError as e:
