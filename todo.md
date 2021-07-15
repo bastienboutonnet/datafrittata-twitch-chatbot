@@ -19,3 +19,5 @@
     is imcompatible with the type hint when all of the classes it holds are in fact of type `BaseCommand`
 
 -   [ ] look into why pyright complains that `BaseCommand` is not callable.
+-   [ ] make an `!so` command
+-   [ ] tell users that don't have the right rights for commands that exist that they cant run it.
