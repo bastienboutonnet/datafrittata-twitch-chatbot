@@ -74,9 +74,6 @@ class Bot(irc.bot.SingleServerIRCBot):
         user_name = event_data["user_name"]
         user_colour = event_data["color"]
         user_badges = self.process_badges(event_data["badges"])
-        command_name: str = ""
-        command_input: str = ""
-        command_match = None
         # add a placeholder that gets filled in later on if needed
         event_data["command_input"] = ""
 
@@ -87,30 +84,26 @@ class Bot(irc.bot.SingleServerIRCBot):
             f"[{user_colour}]{user_name}[/{user_colour}]: [#00BFFF]{message_text} [/#00BFFF]"
         )
 
-        if message_text.startswith("!"):
-            command_output: str = ""
-            command_match = re.match(
-                r"(?P<command_name>^!\w+)\s?(?P<command_text>.*)", message_text
-            )
-            if command_match is None:
-                return
-            command_name, command_input = command_match.groups()
+        command_match = re.match(r"^!(?P<command_name>w+)\s?(?P<command_text>.*)", message_text)
 
-            # TODO: find a more rebust way of removing the exclamation point.
-            command_name = command_name[1:]
-            command = commands_factory(command_name)
+        if command_match is None:
+            return
 
-            if command_input:
-                event_data.update({"command_input": command_input})
-            if command:
-                command_output = ""
-                command = command(**event_data)  # type: ignore
-                if command.restricted and not set(user_badges).intersection(self.ELEVATED_BADGES):
-                    pass
-                else:
-                    command_output = command.run()
-                if command_output:
-                    send_message(connection=connection, channel=self.channel, text=command_output)
+        command_name, command_input = command_match.groups()
+
+        command = commands_factory(command_name)
+
+        if command_input:
+            event_data.update({"command_input": command_input})
+        if command:
+            command_output = ""
+            command = command(**event_data)  # type: ignore
+            if command.restricted and not set(user_badges).intersection(self.ELEVATED_BADGES):
+                pass
+            else:
+                command_output = command.run()
+            if command_output:
+                send_message(connection=connection, channel=self.channel, text=command_output)
 
 
 def main():
