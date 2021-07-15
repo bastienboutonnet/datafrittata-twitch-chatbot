@@ -92,7 +92,6 @@ class Bot(irc.bot.SingleServerIRCBot):
                 r"(?P<command_name>^!\w+)\s?(?P<command_text>.*)", message_text
             )
             if command_match is None:
-                print("no command match")
                 return
             command_name, command_input = command_match.groups()
 
@@ -105,10 +104,7 @@ class Bot(irc.bot.SingleServerIRCBot):
             if command:
                 command_output = ""
                 command = command(**event_data)  # type: ignore
-                print(type(command))
                 if command.restricted and not set(user_badges).intersection(self.ELEVATED_BADGES):
-                    print(user_badges)
-                    print("Not running the command")
                     pass
                 else:
                     command_output = command.run()

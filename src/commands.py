@@ -47,7 +47,6 @@ class TodayCommand(BaseCommand):
         super().__init__()
 
     def run(self):
-        print(TODAY)
         return TODAY
 
 
@@ -55,7 +54,6 @@ class SetTodayCommand(BaseCommand):
     def __init__(self, command_input: str, **kwargs):
         super().__init__()
         self.today_text = command_input
-        print(self.today_text)
 
     @property
     def restricted(self):
