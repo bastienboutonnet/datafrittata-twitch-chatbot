@@ -16,7 +16,7 @@ class BaseCommand(ABC):
         ...
 
     @property
-    def restricted(self):
+    def is_restricted(self):
         return False
 
     def run(self):
@@ -57,7 +57,7 @@ class SetTodayCommand(BaseCommand):
         self.today_text = command_input
 
     @property
-    def restricted(self):
+    def is_restricted(self):
         return True
 
     def run(self):
