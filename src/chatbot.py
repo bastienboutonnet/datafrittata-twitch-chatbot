@@ -98,9 +98,7 @@ class Bot(irc.bot.SingleServerIRCBot):
         if command:
             command_output = ""
             command = command(**event_data)  # type: ignore
-            if command.is_restricted and not set(user_badges).intersection(
-                self.ELEVATED_BADGES
-            ):
+            if command.is_restricted and not set(user_badges).intersection(self.ELEVATED_BADGES):
                 pass
             else:
                 command_output = command.run()
