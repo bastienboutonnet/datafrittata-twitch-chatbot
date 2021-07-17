@@ -1,0 +1,13 @@
+version: "2"
+services:
+    database:
+        image: postgres
+        environment:
+            POSTGRES_USER: "datafrittatabot"
+            POSTGRES_PASSWORD: "magical_password"
+            POSTGRES_DB: "bot_db"
+        ports:
+            - "5432:5432"
+        volumes:
+            - ./db:/var/lib/postgresql/data
+        restart: unless-stopped
