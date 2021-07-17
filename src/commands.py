@@ -4,7 +4,9 @@ from typing import Dict, Optional, Type
 
 from irc.client import ServerConnection
 
-TODAY: str = ""
+from data import BOT_DATA, load_bot_data, update_bot_data
+
+print(BOT_DATA)
 
 
 def send_message(connection: ServerConnection, channel: str, text: str):
@@ -48,7 +50,7 @@ class TodayCommand(BaseCommand):
         super().__init__()
 
     def run(self):
-        return TODAY
+        return BOT_DATA["commands"]["today"]
 
 
 class SetTodayCommand(BaseCommand):
@@ -61,9 +63,53 @@ class SetTodayCommand(BaseCommand):
         return True
 
     def run(self):
-        global TODAY
-        TODAY = self.today_text
+        update_bot_data(
+            data_dict=BOT_DATA, data_part="commands", data_content={"today": self.today_text}
+        )
         logging.info("Today has been set")
+
+
+class BotCommand(BaseCommand):
+    def __init__(self, **kwargs):
+        super().__init__()
+
+    def run(self):
+        return BOT_DATA["commands"].get("bot")
+
+
+class SourceCommand(BaseCommand):
+    def __init__(self, **kwargs):
+        super().__init__()
+
+    def run(self):
+        return BOT_DATA["commands"].get("source")
+
+
+class SetSourceCommand(BaseCommand):
+    def __init__(self, command_input: str, **kwargs):
+        super().__init__()
+        self.source_text = command_input
+
+    @property
+    def is_restricted(self):
+        return True
+
+    def run(self):
+        update_bot_data(
+            data_dict=BOT_DATA, data_part="commands", data_content={"source": self.source_text}
+        )
+
+
+class ReloadCommand(BaseCommand):
+    def __init__(self, **kwargs):
+        super().__init__()
+
+    @property
+    def is_restricted(self):
+        return True
+
+    def run(self):
+        load_bot_data()
 
 
 AVAILABLE_COMMANDS: Dict[str, Type[BaseCommand]] = {
@@ -71,6 +117,10 @@ AVAILABLE_COMMANDS: Dict[str, Type[BaseCommand]] = {
     "commands": ListCommandsCommand,
     "today": TodayCommand,
     "settoday": SetTodayCommand,
+    "bot": BotCommand,
+    "source": SourceCommand,
+    "settsource": SetSourceCommand,
+    "reloadcommands": ReloadCommand,
 }
 
 

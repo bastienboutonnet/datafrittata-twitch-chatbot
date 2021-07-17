@@ -6,6 +6,7 @@ from rich.console import Console
 
 from commands import commands_factory, send_message
 from config import Config
+from data import load_bot_data
 
 console = Console()
 
@@ -58,15 +59,16 @@ class Bot(irc.bot.SingleServerIRCBot):
     @staticmethod
     def process_badges(badges: str) -> List[str]:
         # TODO: maybe we shove it in to a class and let the constructor take care of the magic
-        _badges = badges.split(",")
-        final_badges = []
-        for badge in _badges:
-            match = re.match(r"^(\w+)/(\d+)", badge)
-            if match:
-                # the second element is the badge version which we throw away for now.
-                badge_name, _ = match.groups()
-                final_badges.append(badge_name)
-        return final_badges
+        if badges is not None:
+            _badges = badges.split(",")
+            final_badges = []
+            for badge in _badges:
+                match = re.match(r"^(\w+)/(\d+)", badge)
+                if match:
+                    # the second element is the badge version which we throw away for now.
+                    badge_name, _ = match.groups()
+                    final_badges.append(badge_name)
+            return final_badges
 
     def on_pubmsg(self, connection, event):
         event_data = self.structure_message(event)
@@ -84,8 +86,7 @@ class Bot(irc.bot.SingleServerIRCBot):
             f"[{user_colour}]{user_name}[/{user_colour}]: [#00BFFF]{message_text} [/#00BFFF]"
         )
 
-        command_match = re.match(r"^!(?P<command_name>w+)\s?(?P<command_text>.*)", message_text)
-
+        command_match = re.match(r"^!(?P<command_name>\w+)\s?(?P<command_text>.*)", message_text)
         if command_match is None:
             return
 
@@ -108,6 +109,7 @@ class Bot(irc.bot.SingleServerIRCBot):
 
 def main():
     config = Config()
+    load_bot_data()
     bot = Bot(config)
     bot.start()
 
