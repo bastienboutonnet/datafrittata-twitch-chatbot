@@ -4,7 +4,7 @@ from typing import Dict, Optional, Type
 
 from irc.client import ServerConnection
 
-from data import BOT_DATA, load_bot_data, update_bot_data
+from src.data import BOT_DATA, load_bot_data, update_bot_data
 
 print(BOT_DATA)
 
