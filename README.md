@@ -1,3 +1,10 @@
+[![pre-commit.ci status](https://results.pre-commit.ci/badge/github/bastienboutonnet/datafrittata-twitch-chatbot/main.svg)](https://results.pre-commit.ci/latest/github/bastienboutonnet/datafrittata-twitch-chatbot/main)
+
+![python](https://img.shields.io/badge/python-3.7%20%7C%203.8%20%7C%203.9-blue)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
+![Checked with mypy](https://img.shields.io/badge/mypy-checked-blue?style=flat&logo=python)
+[![Imports: isort](https://img.shields.io/badge/%20imports-isort-%231674b1?style=flat&labelColor=ef8336)](https://pycqa.github.io/isort/)
+
 # datafrittata-twitch-chatbot
 
 Another twitch chatbot that **currently** building on stream. It's hacky as hell and I'm sure it's also going to be over-engineered.
