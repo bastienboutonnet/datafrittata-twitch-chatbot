@@ -1,4 +1,4 @@
-from src.commands import (
+from commands import (
     BotCommand,
     ListCommandsCommand,
     SayHelloCommand,

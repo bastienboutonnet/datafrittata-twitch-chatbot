@@ -4,9 +4,9 @@ from typing import Dict, List
 import irc.bot
 from rich.console import Console
 
-from src.commands import commands_factory, send_message
-from src.config import Config
-from src.data import load_bot_data
+from commands import commands_factory, send_message
+from config import Config
+from data import load_bot_data
 
 console = Console()
 
