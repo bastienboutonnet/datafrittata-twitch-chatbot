@@ -134,3 +134,6 @@ example_payload.txt
 
 # JetBrains IDE project directory
 .idea/
+
+# db stuff
+db/
