@@ -63,9 +63,6 @@ class SetTodayCommand(BaseCommand):
 
     def run(self):
         self.db_connector.update_command(command_name="today", command_response=self.today_text)
-        # update_bot_data(
-        # data_dict=BOT_DATA, data_part="commands", data_content={"today": self.today_text}
-        # )
         logging.info("Today has been set")
 
 
