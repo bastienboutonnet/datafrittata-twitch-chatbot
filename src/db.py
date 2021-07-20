@@ -5,6 +5,7 @@
 
 
 from typing import Optional
+import os
 
 from sqlalchemy import Column, MetaData, String, Table, create_engine, insert, select, update
 from sqlalchemy.exc import IntegrityError
@@ -20,6 +21,7 @@ class DbConnector:
         else:
             db_name = "bot_database"
 
+        os.makedirs("db", exist_ok=True)
         self.engine = create_engine(f"sqlite:///../db/{db_name}.db")
         self.metadata = MetaData()
         self.create_db()
