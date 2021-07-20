@@ -1,1 +1,6 @@
-{ "commands": { "today": "test test", "source": "source is not set yet." } }
+{
+    "commands": {
+        "today": "working on the bot, building database for commands",
+        "source": "source is not set yet."
+    }
+}

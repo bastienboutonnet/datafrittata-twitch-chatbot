@@ -5,8 +5,7 @@ from typing import Dict, Optional, Type
 from irc.client import ServerConnection
 
 from data import BOT_DATA, load_bot_data, update_bot_data
-
-print(BOT_DATA)
+from db import DbConnector
 
 
 def send_message(connection: ServerConnection, channel: str, text: str):
@@ -14,8 +13,8 @@ def send_message(connection: ServerConnection, channel: str, text: str):
 
 
 class BaseCommand(ABC):
-    def __init__(self, *args, **kwargs):
-        ...
+    def __init__(self, db_connector: DbConnector, **kwargs):
+        self.db_connector = db_connector
 
     @property
     def is_restricted(self):
@@ -26,8 +25,8 @@ class BaseCommand(ABC):
 
 
 class SayHelloCommand(BaseCommand):
-    def __init__(self, user_name: str, **kwargs):
-        super().__init__()
+    def __init__(self, db_connector: DbConnector, user_name: str, **kwargs):
+        super().__init__(db_connector)
         self.user_name = user_name
 
     def run(self):
@@ -36,8 +35,8 @@ class SayHelloCommand(BaseCommand):
 
 
 class ListCommandsCommand(BaseCommand):
-    def __init__(self, *args, **kwargs):
-        super().__init__()
+    def __init__(self, db_connector: DbConnector, **kwargs):
+        super().__init__(db_connector)
 
     def run(self):
         all_commands = " !".join(AVAILABLE_COMMANDS)
@@ -46,16 +45,16 @@ class ListCommandsCommand(BaseCommand):
 
 
 class TodayCommand(BaseCommand):
-    def __init__(self, **kwargs):
-        super().__init__()
+    def __init__(self, db_connector: DbConnector, **kwargs):
+        super().__init__(db_connector)
 
     def run(self):
-        return BOT_DATA["commands"]["today"]
+        return self.db_connector.retrive_command_response("today")
 
 
 class SetTodayCommand(BaseCommand):
-    def __init__(self, command_input: str, **kwargs):
-        super().__init__()
+    def __init__(self, db_connector: DbConnector, command_input: str, **kwargs):
+        super().__init__(db_connector)
         self.today_text = command_input
 
     @property
@@ -63,31 +62,32 @@ class SetTodayCommand(BaseCommand):
         return True
 
     def run(self):
-        update_bot_data(
-            data_dict=BOT_DATA, data_part="commands", data_content={"today": self.today_text}
-        )
+        self.db_connector.update_command(command_name="today", command_response=self.today_text)
+        # update_bot_data(
+        # data_dict=BOT_DATA, data_part="commands", data_content={"today": self.today_text}
+        # )
         logging.info("Today has been set")
 
 
 class BotCommand(BaseCommand):
-    def __init__(self, **kwargs):
-        super().__init__()
+    def __init__(self, db_connector: DbConnector, **kwargs):
+        super().__init__(db_connector)
 
     def run(self):
         return BOT_DATA["commands"].get("bot")
 
 
 class SourceCommand(BaseCommand):
-    def __init__(self, **kwargs):
-        super().__init__()
+    def __init__(self, db_connector: DbConnector, **kwargs):
+        super().__init__(db_connector)
 
     def run(self):
         return BOT_DATA["commands"].get("source")
 
 
 class SetSourceCommand(BaseCommand):
-    def __init__(self, command_input: str, **kwargs):
-        super().__init__()
+    def __init__(self, db_connector: DbConnector, command_input: str, **kwargs):
+        super().__init__(db_connector)
         self.source_text = command_input
 
     @property
@@ -101,8 +101,8 @@ class SetSourceCommand(BaseCommand):
 
 
 class ReloadCommand(BaseCommand):
-    def __init__(self, **kwargs):
-        super().__init__()
+    def __init__(self, db_connector: DbConnector, **kwargs):
+        super().__init__(db_connector)
 
     @property
     def is_restricted(self):
