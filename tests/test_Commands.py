@@ -9,7 +9,6 @@ from commands import (
 )
 from db import DbConnector
 
-
 connector = DbConnector(is_test=True)
 
 
