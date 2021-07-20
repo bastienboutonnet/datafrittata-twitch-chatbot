@@ -4,8 +4,8 @@
 # - [ ] set up some stuff that allows us to update the commands table.
 
 
-from typing import Optional
 import os
+from typing import Optional
 
 from sqlalchemy import Column, MetaData, String, Table, create_engine, insert, select, update
 from sqlalchemy.exc import IntegrityError
