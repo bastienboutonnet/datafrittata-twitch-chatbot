@@ -17,7 +17,7 @@ if __name__ == "__main__":
     minor = sys.version_info[1]
     micro = sys.version_info[2]
 
-    pyversion = str(major)+"."+str(minor)+"."+str(micro)
+    pyversion = str(major) + "." + str(minor) + "." + str(micro)
 
     if major != 3 or major == 3 and minor < 9:
         print("This chatbot does need at least Python version 3.9 to work.")
@@ -25,4 +25,5 @@ if __name__ == "__main__":
         sys.exit(1)
 
     import chatbot
+
     chatbot.main()
