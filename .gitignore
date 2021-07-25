@@ -138,4 +138,3 @@ example_payload.txt
 # db stuff
 db/**
 **.db
-!db/.gitkeep
