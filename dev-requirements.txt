@@ -2,3 +2,4 @@ pytest
 pre-commit
 mypy
 black
+pytest-datafiles
