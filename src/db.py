@@ -35,13 +35,13 @@ class DbConnector:
         self.add_new_command("source", "no source code or repo provided yet")
 
     def add_new_command(self, command_name: str, command_response: str) -> None:
-        print("Inserting {command_name} with: {command_response}")
+        print(f"Inserting {command_name} with: {command_response}")
         try:
             stmt = insert(self.commands).values((command_name, command_response))
             self.conn = self.engine.connect()
             self.conn.execute(stmt)
         except IntegrityError:
-            print("command already exists")
+            print("command already exists, use a set<command> if you want to change its content")
         return
 
     def update_command(self, command_name: str, command_response: str) -> None:
