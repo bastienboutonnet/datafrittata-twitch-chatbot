@@ -6,7 +6,6 @@ from rich.console import Console
 
 from commands import commands_factory, send_message
 from config import Config
-from data import load_bot_data
 from db import DbConnector
 
 console = Console()
@@ -111,7 +110,6 @@ class Bot(irc.bot.SingleServerIRCBot):
 
 def main():
     config = Config()
-    load_bot_data()
     db_connector = DbConnector()
     bot = Bot(config, db_connector=db_connector)
     bot.start()

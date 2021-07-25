@@ -14,15 +14,11 @@ from sqlalchemy.exc import IntegrityError
 # TODO: we might want to have a list of available commands somewhere in the class so that we can
 # quickly check before updating so that we don't crash.
 class DbConnector:
-    def __init__(self, is_test: bool = False):
+    def __init__(self, db_path: str = "../db"):
 
-        if is_test:
-            db_name = "test_bot_db"
-        else:
-            db_name = "bot_database"
-
-        os.makedirs("db", exist_ok=True)
-        self.engine = create_engine(f"sqlite:///../db/{db_name}.db")
+        self.db_path = db_path
+        os.makedirs(self.db_path, exist_ok=True)
+        self.engine = create_engine(f"sqlite:///{self.db_path}bot_database.db")
         self.metadata = MetaData()
         self.create_db()
 
