@@ -1,9 +1,10 @@
 import logging
 from abc import ABC
-from typing import Dict, Optional, Type
+from typing import Dict, List, Optional, Type
 
-from db import DbConnector
 from irc.client import ServerConnection
+
+from chatbot.db import DbConnector
 
 
 def send_message(connection: ServerConnection, channel: str, text: str):
@@ -102,11 +103,11 @@ AVAILABLE_COMMANDS: Dict[str, Type[BaseCommand]] = {
     "source": SourceCommand,
     "settsource": SetSourceCommand,
 }
+COMMANDS_TO_IGNORE: List[str] = ["drop", "keyboard", "dj", "frittata", "work", "discord"]
 
 
 def commands_factory(command_name: str) -> Optional[Type[BaseCommand]]:
     try:
         return AVAILABLE_COMMANDS[command_name]
-    except KeyError as e:
-        logging.exception("Looks like this command doesn't exist: %s", e)
+    except KeyError:
         return None

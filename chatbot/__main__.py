@@ -24,6 +24,6 @@ if __name__ == "__main__":
         print("You're using Python version %s" % (pyversion))
         sys.exit(1)
 
-    import chatbot
+    import chatbot.bot
 
-    chatbot.main()
+    chatbot.bot.main()

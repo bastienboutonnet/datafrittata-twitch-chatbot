@@ -1,11 +1,12 @@
 import re
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 import irc.bot
-from commands import commands_factory, send_message
-from config import Config
-from db import DbConnector
 from rich.console import Console
+
+from chatbot.commands import COMMANDS_TO_IGNORE, commands_factory, send_message
+from chatbot.config import Config
+from chatbot.db import DbConnector
 
 console = Console()
 
@@ -70,6 +71,17 @@ class Bot(irc.bot.SingleServerIRCBot):
                     final_badges.append(badge_name)
             return final_badges
 
+    @staticmethod
+    def generate_badge_string(badges: List[str]) -> Optional[str]:
+        badge_mapping: Dict[str, str] = {"founder": "[#7F45E9] 1st [/#7F45E9]"}
+        badges_str = []
+        for badge in badges:
+            badges_str.append(badge_mapping.get(badge, ""))
+        print(badges_str)
+        if badges_str:
+            return "".join(badges_str)
+        return None
+
     def on_pubmsg(self, connection, event):
         event_data = self.structure_message(event)
         message_text = event_data["message"]
@@ -78,12 +90,12 @@ class Bot(irc.bot.SingleServerIRCBot):
         user_badges = self.process_badges(event_data["badges"])
         # add a placeholder that gets filled in later on if needed
         event_data["command_input"] = ""
-
+        badges_str = self.generate_badge_string(user_badges)
         # printing to the terminal stuff
         if not user_colour:
             user_colour = "#fff44f"
         console.print(
-            f"[{user_colour}]{user_name}[/{user_colour}]: [#00BFFF]{message_text} [/#00BFFF]"
+            f"{badges_str}[{user_colour}]{user_name}[/{user_colour}]: [#00BFFF]{message_text} [/#00BFFF]"
         )
 
         command_match = re.match(r"^!(?P<command_name>\w+)\s?(?P<command_text>.*)", message_text)
@@ -105,6 +117,14 @@ class Bot(irc.bot.SingleServerIRCBot):
                 command_output = command.run()
             if command_output:
                 send_message(connection=connection, channel=self.channel, text=command_output)
+        elif not command and command_name not in COMMANDS_TO_IGNORE:
+            command_output = (
+                f"Looks like the bot doesn't know {command_name}. "
+                "Do !commands to find out what it can do."
+            )
+            # TODO: add the unknown command to a db table of non-imple commands
+            # so that we can, maybe, add it later.
+            send_message(connection=connection, channel=self.channel, text=command_output)
 
 
 def main():
