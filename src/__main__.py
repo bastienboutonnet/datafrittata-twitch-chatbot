@@ -19,8 +19,8 @@ if __name__ == "__main__":
 
     pyversion = str(major) + "." + str(minor) + "." + str(micro)
 
-    if major != 3 or major == 3 and minor < 9:
-        print("This chatbot does need at least Python version 3.9 to work.")
+    if major != 3 or major == 3 and minor < 7:
+        print("This chatbot does need at least Python version 3.7 to work.")
         print("You're using Python version %s" % (pyversion))
         sys.exit(1)
 
