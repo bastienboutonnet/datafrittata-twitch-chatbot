@@ -2,3 +2,6 @@ pytest
 pre-commit
 mypy
 black
+pytest-datafiles
+pytest-dependency
+pytest-cov

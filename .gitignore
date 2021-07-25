@@ -136,4 +136,5 @@ example_payload.txt
 .idea/
 
 # db stuff
-db/
+db/**
+**.db

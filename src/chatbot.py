@@ -6,7 +6,7 @@ from rich.console import Console
 
 from commands import commands_factory, send_message
 from config import Config
-from data import load_bot_data
+from db import DbConnector
 
 console = Console()
 
@@ -17,12 +17,13 @@ console = Console()
 class Bot(irc.bot.SingleServerIRCBot):
     ELEVATED_BADGES = {"broadcaster"}
 
-    def __init__(self, config: Config):
+    def __init__(self, config: Config, db_connector: DbConnector):
         self._config = config
         self.client_id = self._config.client_id
         self.token = self._config.oauth_token
         self.channel = f"#{self._config.channel}"
         self.bot_name = self._config.bot_name
+        self.db_connector = db_connector
 
         # Create IRC bot connection
         server = "irc.chat.twitch.tv"
@@ -98,7 +99,7 @@ class Bot(irc.bot.SingleServerIRCBot):
             event_data.update({"command_input": command_input})
         if command:
             command_output = ""
-            command = command(**event_data)  # type: ignore
+            command = command(self.db_connector, **event_data)  # type: ignore
             if command.is_restricted and not set(user_badges).intersection(self.ELEVATED_BADGES):
                 pass
             else:
@@ -109,8 +110,8 @@ class Bot(irc.bot.SingleServerIRCBot):
 
 def main():
     config = Config()
-    load_bot_data()
-    bot = Bot(config)
+    db_connector = DbConnector()
+    bot = Bot(config, db_connector=db_connector)
     bot.start()
 
 

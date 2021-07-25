@@ -11,10 +11,13 @@ python-dotenv = "^0.18.0"
 irc = "^19.0.1"
 rich = "^10.5.0"
 pydantic = "^1.8.2"
+SQLAlchemy = "^1.4.21"
+pytest-dependency = "^0.5.1"
 
 [tool.poetry.dev-dependencies]
 mypy = "^0.910"
 pre-commit = "^2.13.0"
+pytest-cov = "^2.12.1"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
