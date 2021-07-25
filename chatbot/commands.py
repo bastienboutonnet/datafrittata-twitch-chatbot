@@ -2,9 +2,8 @@ import logging
 from abc import ABC
 from typing import Dict, Optional, Type
 
-from irc.client import ServerConnection
-
 from db import DbConnector
+from irc.client import ServerConnection
 
 
 def send_message(connection: ServerConnection, channel: str, text: str):

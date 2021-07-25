@@ -2,11 +2,10 @@ import re
 from typing import Dict, List
 
 import irc.bot
-from rich.console import Console
-
 from commands import commands_factory, send_message
 from config import Config
 from db import DbConnector
+from rich.console import Console
 
 console = Console()
 
