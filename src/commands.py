@@ -4,7 +4,6 @@ from typing import Dict, Optional, Type
 
 from irc.client import ServerConnection
 
-from data import BOT_DATA, load_bot_data, update_bot_data
 from db import DbConnector
 
 
@@ -71,7 +70,7 @@ class BotCommand(BaseCommand):
         super().__init__(db_connector)
 
     def run(self):
-        return BOT_DATA["commands"].get("bot")
+        return self.db_connector.retrive_command_response("bot")
 
 
 class SourceCommand(BaseCommand):
@@ -79,7 +78,7 @@ class SourceCommand(BaseCommand):
         super().__init__(db_connector)
 
     def run(self):
-        return BOT_DATA["commands"].get("source")
+        return self.db_connector.retrive_command_response("source")
 
 
 class SetSourceCommand(BaseCommand):
@@ -92,21 +91,7 @@ class SetSourceCommand(BaseCommand):
         return True
 
     def run(self):
-        update_bot_data(
-            data_dict=BOT_DATA, data_part="commands", data_content={"source": self.source_text}
-        )
-
-
-class ReloadCommand(BaseCommand):
-    def __init__(self, db_connector: DbConnector, **kwargs):
-        super().__init__(db_connector)
-
-    @property
-    def is_restricted(self):
-        return True
-
-    def run(self):
-        load_bot_data()
+        self.db_connector.update_command(command_name="source", command_response=self.source_text)
 
 
 AVAILABLE_COMMANDS: Dict[str, Type[BaseCommand]] = {
@@ -117,7 +102,6 @@ AVAILABLE_COMMANDS: Dict[str, Type[BaseCommand]] = {
     "bot": BotCommand,
     "source": SourceCommand,
     "settsource": SetSourceCommand,
-    "reloadcommands": ReloadCommand,
 }
 
 

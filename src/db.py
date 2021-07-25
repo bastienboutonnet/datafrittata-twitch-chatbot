@@ -33,6 +33,11 @@ class DbConnector:
 
         self.add_new_command("today", "today is not set yet")
         self.add_new_command("source", "no source code or repo provided yet")
+        self.add_new_command(
+            "bot",
+            "We're writing the bot on stream, you can find the repo here: "
+            "https://github.com/bastienboutonnet/datafrittata-twitch-chatbot",
+        )
 
     def add_new_command(self, command_name: str, command_response: str) -> None:
         print(f"Inserting {command_name} with: {command_response}")
@@ -45,7 +50,7 @@ class DbConnector:
         return
 
     def update_command(self, command_name: str, command_response: str) -> None:
-        print("Updating {command_name} with: {command_response}")
+        print(f"Updating {command_name} with: {command_response}")
         stmt = (
             update(self.commands)
             .where(self.commands.c.command_name == command_name)
