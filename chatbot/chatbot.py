@@ -4,9 +4,8 @@ from typing import Dict, List
 import irc.bot
 from commands import commands_factory, send_message
 from config import Config
-from rich.console import Console
-
 from db import DbConnector
+from rich.console import Console
 
 console = Console()
 
