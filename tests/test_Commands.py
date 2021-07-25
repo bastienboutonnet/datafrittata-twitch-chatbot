@@ -8,7 +8,7 @@ from db import DbConnector
 
 # make sure to grab the paths where the db will live in the
 # context of pytest, potentially create the folder if needed
-FIXTURE_DIR = Path(__file__).resolve().parents[1].joinpath("db/test")
+FIXTURE_DIR = Path(__file__).resolve().parents[1].joinpath("db/test/")
 os.makedirs(FIXTURE_DIR, exist_ok=True)
 
 
