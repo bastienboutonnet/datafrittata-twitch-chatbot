@@ -2,7 +2,7 @@ import os
 
 from dotenv import load_dotenv
 
-load_dotenv("bot_env_vars.env")
+load_dotenv(os.path.join(os.path.dirname(__file__), "bot_env_vars.env"))
 
 
 class Config:
