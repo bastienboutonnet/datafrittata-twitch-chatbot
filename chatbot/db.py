@@ -14,9 +14,7 @@ from sqlalchemy.exc import IntegrityError
 # TODO: we might want to have a list of available commands somewhere in the class so that we can
 # quickly check before updating so that we don't crash.
 class DbConnector:
-    def __init__(
-        self, db_path: str = os.path.join(os.path.dirname(__file__), "../db/prod/")
-    ):
+    def __init__(self, db_path: str = os.path.join(os.path.dirname(__file__), "../db/prod/")):
 
         self.db_path = db_path
         os.makedirs(self.db_path, exist_ok=True)
