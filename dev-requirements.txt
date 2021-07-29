@@ -5,4 +5,3 @@ black
 pytest-datafiles
 pytest-dependency
 pytest-cov
-freezegun

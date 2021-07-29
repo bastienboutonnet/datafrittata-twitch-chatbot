@@ -1,11 +1,8 @@
-import datetime
 import os
 from pathlib import Path
 
 import pytest
-from freezegun import freeze_time
 
-from chatbot.bot import START_TIME
 from chatbot.commands import (
     BotCommand,
     ListCommandsCommand,
@@ -39,13 +36,14 @@ def test_ListCommandsCommand(datafiles):
     assert cmd.is_restricted is False
 
 
-# TODO: Find a way to mock the time of the global var
 @pytest.mark.dependency()
 @pytest.mark.datafiles(FIXTURE_DIR)
 def test_TodayCommand(datafiles):
     connector = DbConnector(db_path=datafiles)
     cmd = TodayCommand(connector)
-    assert cmd.run() == "01/01/2021 | today is not set yet"
+    cmd_resp = cmd.run()
+    assert cmd_resp is not None
+    assert cmd_resp.split("|")[1].strip() == "today is not set yet"
     assert cmd.is_restricted is False
 
 
@@ -84,7 +82,8 @@ def test_SetTodayCommand(datafiles):
     today = TodayCommand(connector)
     today_text = today.run()
 
-    assert today_text == expectation
+    assert today_text is not None
+    assert today_text.split("|")[1].strip() == expectation
     assert set_cmd.is_restricted == True
 
 

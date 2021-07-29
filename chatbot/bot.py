@@ -82,6 +82,7 @@ class Bot(irc.bot.SingleServerIRCBot):
             "subscriber": "[#FD3E81]六[/#FD3E81]",
             "broadcaster": "[#BBD5ED] [/#BBD5ED]",
             "vip": "[#008DD5] [/#008DD5]",
+            "premium": "[#a9f0ee] [/#a9f0ee]",
         }
         badges_str = []
         for badge in badges:
