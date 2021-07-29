@@ -1,14 +1,17 @@
 import re
-from typing import Dict, List
+from datetime import datetime
+from typing import Dict, List, Optional
 
 import irc.bot
-from commands import commands_factory, send_message
-from config import Config
-from db import DbConnector
 from rich.console import Console
+
+from chatbot.commands import COMMANDS_TO_IGNORE, commands_factory, send_message
+from chatbot.config import Config
+from chatbot.db import DbConnector
 
 console = Console()
 
+START_TIME = datetime.now()
 
 # TODO: DOn't forget to thank wOrd2vect for the tip on irc.bot
 
@@ -70,6 +73,24 @@ class Bot(irc.bot.SingleServerIRCBot):
                     final_badges.append(badge_name)
             return final_badges
 
+    # consider parsing the other versions of the sub badges and having the start symbol fill up
+    # 紐and 留and 硫
+    @staticmethod
+    def generate_badge_string(badges: List[str]) -> Optional[str]:
+        badge_mapping: Dict[str, str] = {
+            "founder": "[#7F45E9] [/#7F45E9]",
+            "subscriber": "[#FD3E81]六[/#FD3E81]",
+            "broadcaster": "[#BBD5ED] [/#BBD5ED]",
+            "vip": "[#008DD5] [/#008DD5]",
+            "premium": "[#a9f0ee] [/#a9f0ee]",
+        }
+        badges_str = []
+        for badge in badges:
+            badges_str.append(badge_mapping.get(badge, ""))
+        if badges_str:
+            return "".join(badges_str)
+        return None
+
     def on_pubmsg(self, connection, event):
         event_data = self.structure_message(event)
         message_text = event_data["message"]
@@ -78,12 +99,12 @@ class Bot(irc.bot.SingleServerIRCBot):
         user_badges = self.process_badges(event_data["badges"])
         # add a placeholder that gets filled in later on if needed
         event_data["command_input"] = ""
-
+        badges_str = self.generate_badge_string(user_badges)
         # printing to the terminal stuff
         if not user_colour:
             user_colour = "#fff44f"
         console.print(
-            f"[{user_colour}]{user_name}[/{user_colour}]: [#00BFFF]{message_text} [/#00BFFF]"
+            f"{badges_str}[{user_colour}][bold]{user_name}[/bold][/{user_colour}]: [#00BFFF]{message_text}[/#00BFFF]"
         )
 
         command_match = re.match(r"^!(?P<command_name>\w+)\s?(?P<command_text>.*)", message_text)
@@ -105,6 +126,14 @@ class Bot(irc.bot.SingleServerIRCBot):
                 command_output = command.run()
             if command_output:
                 send_message(connection=connection, channel=self.channel, text=command_output)
+        elif not command and command_name not in COMMANDS_TO_IGNORE:
+            command_output = (
+                f"Looks like the bot doesn't know {command_name}. "
+                "Do !commands to find out what it can do."
+            )
+            # TODO: add the unknown command to a db table of non-imple commands
+            # so that we can, maybe, add it later.
+            send_message(connection=connection, channel=self.channel, text=command_output)
 
 
 def main():

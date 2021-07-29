@@ -2,7 +2,8 @@ import os
 from pathlib import Path
 
 import pytest
-from commands import (
+
+from chatbot.commands import (
     BotCommand,
     ListCommandsCommand,
     SayHelloCommand,
@@ -11,7 +12,7 @@ from commands import (
     SourceCommand,
     TodayCommand,
 )
-from db import DbConnector
+from chatbot.db import DbConnector
 
 # make sure to grab the paths where the db will live in the
 # context of pytest, potentially create the folder if needed
@@ -31,7 +32,7 @@ def test_SayHelloCommand(datafiles):
 def test_ListCommandsCommand(datafiles):
     connector = DbConnector(db_path=datafiles)
     cmd = ListCommandsCommand(connector)
-    assert cmd.run() == "!hello !commands !today !settoday !bot !source !settsource"
+    assert cmd.run() == "!hello !commands !today !settoday !bot !source !settsource !uptime"
     assert cmd.is_restricted is False
 
 
@@ -40,7 +41,9 @@ def test_ListCommandsCommand(datafiles):
 def test_TodayCommand(datafiles):
     connector = DbConnector(db_path=datafiles)
     cmd = TodayCommand(connector)
-    assert cmd.run() == "today is not set yet"
+    cmd_resp = cmd.run()
+    assert cmd_resp is not None
+    assert cmd_resp.split("|")[1].strip() == "today is not set yet"
     assert cmd.is_restricted is False
 
 
@@ -79,7 +82,8 @@ def test_SetTodayCommand(datafiles):
     today = TodayCommand(connector)
     today_text = today.run()
 
-    assert today_text == expectation
+    assert today_text is not None
+    assert today_text.split("|")[1].strip() == expectation
     assert set_cmd.is_restricted == True
 
 
