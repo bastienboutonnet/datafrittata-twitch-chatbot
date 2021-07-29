@@ -1,8 +1,12 @@
+import datetime
 import os
 from pathlib import Path
 
 import pytest
-from commands import (
+from freezegun import freeze_time
+
+from chatbot.bot import START_TIME
+from chatbot.commands import (
     BotCommand,
     ListCommandsCommand,
     SayHelloCommand,
@@ -11,7 +15,7 @@ from commands import (
     SourceCommand,
     TodayCommand,
 )
-from db import DbConnector
+from chatbot.db import DbConnector
 
 # make sure to grab the paths where the db will live in the
 # context of pytest, potentially create the folder if needed
@@ -31,16 +35,17 @@ def test_SayHelloCommand(datafiles):
 def test_ListCommandsCommand(datafiles):
     connector = DbConnector(db_path=datafiles)
     cmd = ListCommandsCommand(connector)
-    assert cmd.run() == "!hello !commands !today !settoday !bot !source !settsource"
+    assert cmd.run() == "!hello !commands !today !settoday !bot !source !settsource !uptime"
     assert cmd.is_restricted is False
 
 
+# TODO: Find a way to mock the time of the global var
 @pytest.mark.dependency()
 @pytest.mark.datafiles(FIXTURE_DIR)
 def test_TodayCommand(datafiles):
     connector = DbConnector(db_path=datafiles)
     cmd = TodayCommand(connector)
-    assert cmd.run() == "today is not set yet"
+    assert cmd.run() == "01/01/2021 | today is not set yet"
     assert cmd.is_restricted is False
 
 
