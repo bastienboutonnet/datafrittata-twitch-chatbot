@@ -104,7 +104,7 @@ class Bot(irc.bot.SingleServerIRCBot):
         if not user_colour:
             user_colour = "#fff44f"
         console.print(
-            f"{badges_str}[{user_colour}]{user_name}[/{user_colour}]: [#00BFFF]{message_text}[/#00BFFF]"
+            f"{badges_str}[{user_colour}][bold]{user_name}[/bold][/{user_colour}]: [#00BFFF]{message_text}[/#00BFFF]"
         )
 
         command_match = re.match(r"^!(?P<command_name>\w+)\s?(?P<command_text>.*)", message_text)
