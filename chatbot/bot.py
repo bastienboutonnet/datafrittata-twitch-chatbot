@@ -1,4 +1,5 @@
 import re
+from datetime import datetime
 from typing import Dict, List, Optional
 
 import irc.bot
@@ -10,6 +11,7 @@ from chatbot.db import DbConnector
 
 console = Console()
 
+START_TIME = datetime.now()
 
 # TODO: DOn't forget to thank wOrd2vect for the tip on irc.bot
 
@@ -71,13 +73,19 @@ class Bot(irc.bot.SingleServerIRCBot):
                     final_badges.append(badge_name)
             return final_badges
 
+    # consider parsing the other versions of the sub badges and having the start symbol fill up
+    # 紐and 留and 硫
     @staticmethod
     def generate_badge_string(badges: List[str]) -> Optional[str]:
-        badge_mapping: Dict[str, str] = {"founder": "[#7F45E9] 1st [/#7F45E9]"}
+        badge_mapping: Dict[str, str] = {
+            "founder": "[#7F45E9] [/#7F45E9]",
+            "subscriber": "[#FD3E81]六[/#FD3E81]",
+            "broadcaster": "[#BBD5ED] [/#BBD5ED]",
+            "vip": "[#008DD5] [/#008DD5]",
+        }
         badges_str = []
         for badge in badges:
             badges_str.append(badge_mapping.get(badge, ""))
-        print(badges_str)
         if badges_str:
             return "".join(badges_str)
         return None
@@ -95,7 +103,7 @@ class Bot(irc.bot.SingleServerIRCBot):
         if not user_colour:
             user_colour = "#fff44f"
         console.print(
-            f"{badges_str}[{user_colour}]{user_name}[/{user_colour}]: [#00BFFF]{message_text} [/#00BFFF]"
+            f"{badges_str}[{user_colour}]{user_name}[/{user_colour}]: [#00BFFF]{message_text}[/#00BFFF]"
         )
 
         command_match = re.match(r"^!(?P<command_name>\w+)\s?(?P<command_text>.*)", message_text)

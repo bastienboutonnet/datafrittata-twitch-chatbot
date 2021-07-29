@@ -1,10 +1,13 @@
 import logging
 from abc import ABC
+from datetime import datetime
 from typing import Dict, List, Optional, Type
 
 from irc.client import ServerConnection
 
 from chatbot.db import DbConnector
+
+START_TIME = datetime.now()
 
 
 def send_message(connection: ServerConnection, channel: str, text: str):
@@ -21,6 +24,18 @@ class BaseCommand(ABC):
 
     def run(self):
         raise NotImplementedError
+
+
+class UptimeCommand(BaseCommand):
+    def __init__(self, db_connector: DbConnector, **kwargs):
+        self.db_connector = db_connector
+
+    def run(self):
+        delta = (datetime.now() - START_TIME).seconds
+        hours = delta // 3600
+        minutes = (delta // 60) % 60
+        seconds = delta % 60
+        return f"We've been online for {hours} hours, {minutes} minutes and {seconds} seconds"
 
 
 class SayHelloCommand(BaseCommand):
@@ -48,7 +63,9 @@ class TodayCommand(BaseCommand):
         super().__init__(db_connector)
 
     def run(self):
-        return self.db_connector.retrive_command_response("today")
+        today_text = self.db_connector.retrive_command_response("today")
+        if today_text:
+            return f"{START_TIME.strftime('%m/%d/%Y')} | {today_text}"
 
 
 class SetTodayCommand(BaseCommand):
@@ -102,6 +119,7 @@ AVAILABLE_COMMANDS: Dict[str, Type[BaseCommand]] = {
     "bot": BotCommand,
     "source": SourceCommand,
     "settsource": SetSourceCommand,
+    "uptime": UptimeCommand,
 }
 COMMANDS_TO_IGNORE: List[str] = ["drop", "keyboard", "dj", "frittata", "work", "discord"]
 
