@@ -9,6 +9,7 @@ from chatbot.commands import (
     SayHelloCommand,
     SetSourceCommand,
     SetTodayCommand,
+    SetUserCountryCommand,
     SourceCommand,
     TodayCommand,
 )
@@ -32,7 +33,10 @@ def test_SayHelloCommand(datafiles):
 def test_ListCommandsCommand(datafiles):
     connector = DbConnector(db_path=datafiles)
     cmd = ListCommandsCommand(connector)
-    assert cmd.run() == "!hello !commands !today !settoday !bot !source !settsource !uptime"
+    assert (
+        cmd.run()
+        == "!hello !commands !today !settoday !bot !source !settsource !uptime !setcountry"
+    )
     assert cmd.is_restricted is False
 
 
@@ -85,6 +89,19 @@ def test_SetTodayCommand(datafiles):
     assert today_text is not None
     assert today_text.split("|")[1].strip() == expectation
     assert set_cmd.is_restricted == True
+
+
+@pytest.mark.datafiles(FIXTURE_DIR)
+def test_SetUserCountryCommand(datafiles):
+    expectation = "france"
+    connector = DbConnector(db_path=datafiles)
+    connector.add_new_user(user_id="999", user_name="test_user")
+
+    set_cmd = SetUserCountryCommand(connector, command_input=expectation, user_id="999")
+    set_cmd.run()
+
+    user_country = connector.get_user_country(user_id="999")
+    assert user_country == expectation
 
 
 @pytest.mark.dependency(depends=["test_SourceCommand"])
