@@ -4,6 +4,7 @@ from typing import Dict, List, Optional
 
 import irc.bot
 from rich.console import Console
+from rich.emoji import EMOJI
 
 from chatbot.commands import COMMANDS_TO_IGNORE, commands_factory, send_message
 from chatbot.config import Config
@@ -47,15 +48,18 @@ class Bot(irc.bot.SingleServerIRCBot):
 
     @staticmethod
     def structure_message(event) -> Dict[str, str]:
-        keys_to_retain = ["color", "display-name", "badges"]
+        keys_to_retain = ["color", "display-name", "badges", "user-id"]
         data = {"message": event.arguments[0]}
 
         # TODO: find a way to rename the keys in a not so fucky way.
         for tag in event.tags:
             if tag["key"] in keys_to_retain:
                 if tag["key"] == "display-name":
-                    tag["key"] = "user_name"
-                data.update({tag["key"]: tag["value"]})
+                    data.update({"user_name": tag["value"]})
+                elif tag["key"] == "user-id":
+                    data.update({"user_id": tag["value"]})
+                else:
+                    data.update({tag["key"]: tag["value"]})
 
         return data
 
@@ -95,18 +99,32 @@ class Bot(irc.bot.SingleServerIRCBot):
         event_data = self.structure_message(event)
         message_text = event_data["message"]
         user_name = event_data["user_name"]
+        user_id = event_data["user_id"]
         user_colour = event_data["color"]
         user_badges = self.process_badges(event_data["badges"])
         # add a placeholder that gets filled in later on if needed
         event_data["command_input"] = ""
         badges_str = self.generate_badge_string(user_badges)
+
+        # do the country emoji thingie
+        user_country_emoji = self.db_connector.get_user_country(user_id=user_id)
+        if user_country_emoji is not None:
+            user_country_emoji = user_country_emoji.strip(":")
+            if user_country_emoji in list(EMOJI.keys()):
+                user_country_emoji = f":{user_country_emoji}: "
+        else:
+            user_country_emoji = ""
+
         # printing to the terminal stuff
         if not user_colour:
             user_colour = "#fff44f"
         console.print(
-            f"{badges_str}[{user_colour}][bold]{user_name}[/bold][/{user_colour}]: [#00BFFF]{message_text}[/#00BFFF]"
+            f"{badges_str}[{user_colour}][bold]{user_name}[/bold][/{user_colour}] "
+            f"{user_country_emoji}: "
+            f"[#00BFFF]{message_text}[/#00BFFF]"
         )
-
+        # attempt to add the uer to the database.
+        self.db_connector.add_new_user(user_id=user_id, user_name=user_name)
         command_match = re.match(r"^!(?P<command_name>\w+)\s?(?P<command_text>.*)", message_text)
         if command_match is None:
             return

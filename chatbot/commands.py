@@ -111,6 +111,22 @@ class SetSourceCommand(BaseCommand):
         self.db_connector.update_command(command_name="source", command_response=self.source_text)
 
 
+class SetUserCountryCommand(BaseCommand):
+    def __init__(self, db_connector: DbConnector, command_input: str, **kwargs):
+        super().__init__(db_connector)
+        self.user_id = kwargs.get("user_id")
+        self.user_country = command_input.lower()
+
+    def run(self):
+        try:
+            assert self.user_id is not None
+            self.db_connector.update_user_country(
+                user_id=self.user_id, user_country=self.user_country
+            )
+        except AssertionError:
+            return None
+
+
 AVAILABLE_COMMANDS: Dict[str, Type[BaseCommand]] = {
     "hello": SayHelloCommand,  # type: ignore
     "commands": ListCommandsCommand,
@@ -120,6 +136,7 @@ AVAILABLE_COMMANDS: Dict[str, Type[BaseCommand]] = {
     "source": SourceCommand,
     "settsource": SetSourceCommand,
     "uptime": UptimeCommand,
+    "setcountry": SetUserCountryCommand,
 }
 COMMANDS_TO_IGNORE: List[str] = ["drop", "keyboard", "dj", "frittata", "work", "discord"]
 

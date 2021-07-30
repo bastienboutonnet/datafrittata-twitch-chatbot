@@ -5,9 +5,20 @@
 
 
 import os
+from datetime import datetime
 from typing import Optional
 
-from sqlalchemy import Column, MetaData, String, Table, create_engine, insert, select, update
+from sqlalchemy import (
+    Column,
+    DateTime,
+    MetaData,
+    String,
+    Table,
+    create_engine,
+    insert,
+    select,
+    update,
+)
 from sqlalchemy.exc import IntegrityError
 
 
@@ -29,6 +40,16 @@ class DbConnector:
             Column("command_name", String(), primary_key=True),
             Column("command_response", String()),
         )
+
+        self.users = Table(
+            "users",
+            self.metadata,
+            Column("user_id", String(), primary_key=True),
+            Column("user_name", String()),
+            Column("country", String()),
+            Column("first_chatted_at", DateTime()),
+        )
+
         self.metadata.create_all(self.engine)
 
         self.add_new_command("today", "today is not set yet")
@@ -38,6 +59,34 @@ class DbConnector:
             "We're writing the bot on stream, you can find the repo here: "
             "https://github.com/bastienboutonnet/datafrittata-twitch-chatbot",
         )
+
+    def add_new_user(self, user_id: str, user_name: str) -> None:
+        try:
+            stmt = insert(self.users).values(
+                user_id=user_id, user_name=user_name, first_chatted_at=datetime.now()
+            )
+            self.conn = self.engine.connect()
+            self.conn.execute(stmt)
+        except IntegrityError:
+            return None
+
+    def update_user_country(self, user_id: str, user_country: str) -> None:
+        stmt = (
+            update(self.users).where(self.users.c.user_id == user_id).values(country=user_country)
+        )
+        self.conn = self.engine.connect()
+        self.conn.execute(stmt)
+        return
+
+    def get_user_country(self, user_id: str) -> Optional[str]:
+        stmt = select(self.users.c.country).where(self.users.c.user_id == user_id)
+        self.conn = self.engine.connect()
+        result = self.conn.execute(stmt)
+        if result:
+            row = result.fetchone()
+            return row[0]
+        else:
+            return None
 
     def add_new_command(self, command_name: str, command_response: str) -> None:
         print(f"Inserting {command_name} with: {command_response}")
