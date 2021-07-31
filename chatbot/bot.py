@@ -137,7 +137,7 @@ class Bot(irc.bot.SingleServerIRCBot):
             event_data.update({"command_input": command_input})
         if command:
             command_output = ""
-            command = command(self.db_connector, **event_data)  # type: ignore
+            command = command(self.db_connector, self._config, **event_data)  # type: ignore
             if command.is_restricted and not set(user_badges).intersection(self.ELEVATED_BADGES):
                 pass
             else:

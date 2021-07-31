@@ -4,6 +4,7 @@
 # - [ ] set up some stuff that allows us to update the commands table.
 
 
+import logging
 import os
 from datetime import datetime
 from typing import Optional
@@ -71,11 +72,16 @@ class DbConnector:
             return None
 
     def update_user_country(self, user_id: str, user_country: str) -> None:
-        stmt = (
-            update(self.users).where(self.users.c.user_id == user_id).values(country=user_country)
-        )
-        self.conn = self.engine.connect()
-        self.conn.execute(stmt)
+        try:
+            stmt = (
+                update(self.users)
+                .where(self.users.c.user_id == user_id)
+                .values(country=user_country)
+            )
+            self.conn = self.engine.connect()
+            self.conn.execute(stmt)
+        except Exception as e:
+            logging.error(f"Could not update user country: {e}")
         return
 
     def get_user_country(self, user_id: str) -> Optional[str]:
@@ -84,7 +90,8 @@ class DbConnector:
         result = self.conn.execute(stmt)
         if result:
             row = result.fetchone()
-            return row[0]
+            if row:
+                return row[0]
         else:
             return None
 
@@ -100,13 +107,16 @@ class DbConnector:
 
     def update_command(self, command_name: str, command_response: str) -> None:
         print(f"Updating {command_name} with: {command_response}")
-        stmt = (
-            update(self.commands)
-            .where(self.commands.c.command_name == command_name)
-            .values(command_response=command_response)
-        )
-        self.conn = self.engine.connect()
-        self.conn.execute(stmt)
+        try:
+            stmt = (
+                update(self.commands)
+                .where(self.commands.c.command_name == command_name)
+                .values(command_response=command_response)
+            )
+            self.conn = self.engine.connect()
+            self.conn.execute(stmt)
+        except Exception as e:
+            logging.error(f"Could not update command: {e}")
         return
 
     def retrive_command_response(self, command_name: str) -> Optional[str]:
@@ -117,5 +127,6 @@ class DbConnector:
         result = self.conn.execute(stmt)
         if result:
             row = result.fetchone()
-            return row[0]
+            if row:
+                return row[0]
         return None
