@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+from typing import Tuple
 
 import pytest
 
@@ -17,14 +18,34 @@ from chatbot.db import DbConnector
 
 # make sure to grab the paths where the db will live in the
 # context of pytest, potentially create the folder if needed
-FIXTURE_DIR = Path(__file__).resolve().parents[1].joinpath("db/test/")
+FIXTURE_DIR = Path(__file__).resolve().parents[1].joinpath("../db/test/")
 os.makedirs(FIXTURE_DIR, exist_ok=True)
+
+
+class Config:
+    def __init__(self) -> None:
+        self.client_id = ""
+        self.client_secret = ""
+        self.oauth_token = ""
+        self.bot_name = ""
+        self.channel = ""
+        self.oauth_token_api = ""
+        self.client_id_api = ""
+        self.bot_api_token = ""
+
+
+def init_connectors_and_config(datafiles) -> Config:
+    config = Config()
+    return config
+
+
+CONFIG = init_connectors_and_config(FIXTURE_DIR)
 
 
 @pytest.mark.datafiles(FIXTURE_DIR)
 def test_SayHelloCommand(datafiles):
     connector = DbConnector(db_path=datafiles)
-    cmd = SayHelloCommand(connector, "DataFrittata")
+    cmd = SayHelloCommand(connector, CONFIG, "DataFrittata")
     assert cmd.run() == "Welcome to the stream, DataFrittata"
     assert cmd.is_restricted is False
 
@@ -32,7 +53,7 @@ def test_SayHelloCommand(datafiles):
 @pytest.mark.datafiles(FIXTURE_DIR)
 def test_ListCommandsCommand(datafiles):
     connector = DbConnector(db_path=datafiles)
-    cmd = ListCommandsCommand(connector)
+    cmd = ListCommandsCommand(connector, CONFIG)
     assert (
         cmd.run()
         == "!hello !commands !today !settoday !bot !source !settsource !uptime !setcountry"
@@ -44,7 +65,7 @@ def test_ListCommandsCommand(datafiles):
 @pytest.mark.datafiles(FIXTURE_DIR)
 def test_TodayCommand(datafiles):
     connector = DbConnector(db_path=datafiles)
-    cmd = TodayCommand(connector)
+    cmd = TodayCommand(connector, CONFIG)
     cmd_resp = cmd.run()
     assert cmd_resp is not None
     assert cmd_resp.split("|")[1].strip() == "today is not set yet"
@@ -58,8 +79,9 @@ def test_BotCommand(datafiles):
         "https://github.com/bastienboutonnet/datafrittata-twitch-chatbot"
     )
 
+    # connector = DbConnector(db_path=datafiles)
     connector = DbConnector(db_path=datafiles)
-    cmd = BotCommand(connector)
+    cmd = BotCommand(connector, CONFIG)
     assert cmd.run() == expectation
     assert cmd.is_restricted is False
 
@@ -69,7 +91,7 @@ def test_BotCommand(datafiles):
 def test_SourceCommand(datafiles):
     expectation = "no source code or repo provided yet"
     connector = DbConnector(db_path=datafiles)
-    cmd = SourceCommand(connector)
+    cmd = SourceCommand(connector, CONFIG)
     assert cmd.run() == expectation
     assert cmd.is_restricted is False
 
@@ -78,12 +100,12 @@ def test_SourceCommand(datafiles):
 @pytest.mark.datafiles(FIXTURE_DIR)
 def test_SetTodayCommand(datafiles):
     expectation = "this is the test today"
-    connector = DbConnector(db_path=datafiles)
 
-    set_cmd = SetTodayCommand(connector, command_input=expectation)
+    connector = DbConnector(db_path=datafiles)
+    set_cmd = SetTodayCommand(connector, CONFIG, command_input=expectation)
     set_cmd.run()
 
-    today = TodayCommand(connector)
+    today = TodayCommand(connector, CONFIG)
     today_text = today.run()
 
     assert today_text is not None
@@ -94,10 +116,11 @@ def test_SetTodayCommand(datafiles):
 @pytest.mark.datafiles(FIXTURE_DIR)
 def test_SetUserCountryCommand(datafiles):
     expectation = "france"
+    # connector = DbConnector(db_path=datafiles)
     connector = DbConnector(db_path=datafiles)
     connector.add_new_user(user_id="999", user_name="test_user")
 
-    set_cmd = SetUserCountryCommand(connector, command_input=expectation, user_id="999")
+    set_cmd = SetUserCountryCommand(connector, CONFIG, command_input=expectation, user_id="999")
     set_cmd.run()
 
     user_country = connector.get_user_country(user_id="999")
@@ -110,10 +133,10 @@ def test_SetSourceCommand(datafiles):
     expectation = "this is the source test text"
     connector = DbConnector(db_path=datafiles)
 
-    set_cmd = SetSourceCommand(connector, command_input=expectation)
+    set_cmd = SetSourceCommand(connector, CONFIG, command_input=expectation)
     set_cmd.run()
 
-    today = SourceCommand(connector)
+    today = SourceCommand(connector, CONFIG)
     source_text = today.run()
 
     assert source_text == expectation
