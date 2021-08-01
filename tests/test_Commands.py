@@ -1,8 +1,9 @@
 import os
 from pathlib import Path
-from typing import Tuple
 
 import pytest
+import respx
+from httpx import Response
 
 from chatbot.commands import (
     BotCommand,
@@ -13,6 +14,7 @@ from chatbot.commands import (
     SetUserCountryCommand,
     SourceCommand,
     TodayCommand,
+    UptimeCommand,
 )
 from chatbot.db import DbConnector
 
@@ -28,7 +30,7 @@ class Config:
         self.client_secret = ""
         self.oauth_token = ""
         self.bot_name = ""
-        self.channel = ""
+        self.channel = "datafrittata"
         self.oauth_token_api = ""
         self.client_id_api = ""
         self.bot_api_token = ""
@@ -141,3 +143,42 @@ def test_SetSourceCommand(datafiles):
 
     assert source_text == expectation
     assert set_cmd.is_restricted == True
+
+
+@pytest.mark.parametrize(
+    "mock_response, time_offset, expectation",
+    [
+        pytest.param(
+            {},
+            "2021-08-01T12:59:25Z",
+            f"{CONFIG.channel} is not currently streaming",
+            id="channel is not live",
+        ),
+        pytest.param(
+            {"data": [{"started_at": "2021-08-01T12:57:25Z"}]},
+            "2021-08-01T12:59:25Z",
+            "We've been online for 2 minutes and 0 seconds",
+            id="channel is live for < 1 hour",
+        ),
+        pytest.param(
+            {"data": [{"started_at": "2021-08-01T12:57:25Z"}]},
+            "2021-08-01T14:57:25Z",
+            "We've been online for 2 hours, 0 minutes and 0 seconds",
+            id="channel is live for > 1 hour",
+        ),
+    ],
+)
+@pytest.mark.datafiles(FIXTURE_DIR)
+@respx.mock
+@pytest.mark.freeze_time
+def test_UptimeCommand(datafiles, mock_response, time_offset, expectation, freezer):
+    connector = DbConnector(db_path=datafiles)
+
+    respx.get(f"https://api.twitch.tv/helix/streams?user_login={CONFIG.channel}").mock(
+        return_value=Response(status_code=200, json=mock_response)
+    )
+
+    freezer.move_to(time_offset)
+    cmd = UptimeCommand(db_connector=connector, config=CONFIG)
+    uptime_response = cmd.run()
+    assert uptime_response == expectation

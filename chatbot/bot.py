@@ -75,6 +75,8 @@ class Bot(irc.bot.SingleServerIRCBot):
                     badge_name, _ = match.groups()
                     final_badges.append(badge_name)
             return final_badges
+        else:
+            return []
 
     # consider parsing the other versions of the sub badges and having the start symbol fill up
     # 紐and 留and 硫
