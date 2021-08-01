@@ -22,7 +22,6 @@ class Bot(irc.bot.SingleServerIRCBot):
 
     def __init__(self, config: Config, db_connector: DbConnector):
         self._config = config
-        self.client_id = self._config.client_id
         self.token = self._config.oauth_token
         self.channel = f"#{self._config.channel}"
         self.bot_name = self._config.bot_name
