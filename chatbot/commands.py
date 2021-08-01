@@ -44,7 +44,6 @@ class UptimeCommand(BaseCommand):
         response = httpx.get(url, headers=headers)
         response_json = response.json()
 
-        # TODO: test this when we're live and write unit test with a httpx mock
         if response_json.get("data", []):
             start_time = response_json["data"][0]["started_at"]
             # timestamp comes back in UTC so we need to compare to a UTC now later.
