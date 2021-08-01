@@ -30,6 +30,7 @@ class BaseCommand(ABC):
 
 
 class UptimeCommand(BaseCommand):
+    # TODO: introduce a cool down period for the api call.
     def __init__(self, db_connector: DbConnector, config: Config, **kwargs):
         self.db_connector = db_connector
         self.config = config
@@ -46,15 +47,21 @@ class UptimeCommand(BaseCommand):
         # TODO: test this when we're live and write unit test with a httpx mock
         if response_json.get("data", []):
             start_time = response_json["data"][0]["started_at"]
+            # timestamp comes back in UTC so we need to compare to a UTC now later.
             start_time = datetime.strptime(
                 start_time,
                 "%Y-%m-%dT%H:%M:%SZ",
             )
-            delta = (datetime.now() - start_time).seconds
+            delta = (datetime.utcnow() - start_time).seconds
             hours = delta // 3600
+            # we only do it for hours since that's the only one that's likely to be 0 for long
+            if hours:
+                hours_str = f"{hours} hours, "
+            else:
+                hours_str = ""
             minutes = (delta // 60) % 60
             seconds = delta % 60
-            return f"We've been online for {hours} hours, {minutes} minutes and {seconds} seconds"
+            return f"We've been online for {hours_str}{minutes} minutes and {seconds} seconds"
         else:
             return f"{self.config.channel} is not currently streaming"
 

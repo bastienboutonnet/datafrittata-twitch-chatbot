@@ -1,3 +1,4 @@
+import logging
 import os
 
 import httpx
@@ -13,17 +14,22 @@ class Config:
         self.bot_name = os.getenv("BOT_NAME")
         self.channel = os.getenv("CHANNEL")
         self.client_id_api = os.getenv("CLIENT_ID_API")
-        self.bot_api_token = self.get_bot_api_token()
-
-    def get_bot_api_token(self):
-        r = httpx.post(
+        self.api_url = (
             "https://id.twitch.tv/oauth2/token"
             f"?client_id={self.client_id_api}"
             f"&client_secret={self.client_secret}"
             "&grant_type=client_credentials"
         )
-        if r.json():
+        self.bot_api_token = self.get_bot_api_token()
+
+    def get_bot_api_token(self):
+        r = httpx.post(self.api_url)
+        if r.status_code == 200 and r.json() and r.json().get("access_token"):
             return r.json()["access_token"]
+        else:
+            logging.error(
+                f"we did not get an access_token from twitch. Status code: {r.status_code}"
+            )
 
 
 if __name__ == "__main__":

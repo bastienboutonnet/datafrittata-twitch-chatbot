@@ -19,6 +19,9 @@ httpx = "^0.18.2"
 mypy = "^0.910"
 pre-commit = "^2.13.0"
 pytest-cov = "^2.12.1"
+respx = "^0.17.1"
+freezegun = "^1.1.0"
+pytest-freezegun = "^0.4.2"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
