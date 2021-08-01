@@ -30,7 +30,8 @@ class BaseCommand(ABC):
 
 
 class UptimeCommand(BaseCommand):
-    # TODO: introduce a cool down period for the api call.
+    # TODO: introduce a cool down period for the api call but this might be hard
+    # to test without having to introduce sleep and make the tests slow as hell to run.
     def __init__(self, db_connector: DbConnector, config: Config, **kwargs):
         self.db_connector = db_connector
         self.config = config
