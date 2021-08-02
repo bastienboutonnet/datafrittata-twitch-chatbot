@@ -15,6 +15,7 @@ from sqlalchemy import (
     MetaData,
     String,
     Table,
+    ForeignKey,
     create_engine,
     insert,
     select,
@@ -51,6 +52,13 @@ class DbConnector:
             Column("first_chatted_at", DateTime()),
         )
 
+        self.not_implemented_commands = Table(
+            "not_implemented_commands",
+            self.metadata,
+            Column("command_name", String(), primary_key=True),
+            Column("user_id", String(), ForeignKey("users.user_id")),
+        )
+
         self.metadata.create_all(self.engine)
 
         self.add_new_command("today", "today is not set yet")
@@ -71,6 +79,16 @@ class DbConnector:
         except IntegrityError:
             return None
 
+    def add_not_implemented_command(self, command_name: str, user_id: str) -> None:
+        try:
+            stmt = insert(self.not_implemented_commands).values(
+                command_name=command_name, user_id=user_id
+            )
+            self.conn = self.engine.connect()
+            self.conn.execute(stmt)
+        except IntegrityError:
+            return None
+
     def update_user_country(self, user_id: str, user_country: str) -> None:
         try:
             stmt = (
@@ -82,7 +100,7 @@ class DbConnector:
             self.conn.execute(stmt)
         except Exception as e:
             logging.error(f"Could not update user country: {e}")
-        return
+        return None
 
     def get_user_country(self, user_id: str) -> Optional[str]:
         stmt = select(self.users.c.country).where(self.users.c.user_id == user_id)
@@ -92,6 +110,8 @@ class DbConnector:
             row = result.fetchone()
             if row:
                 return row[0]
+            else:
+                return None
         else:
             return None
 
