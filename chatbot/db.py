@@ -7,7 +7,7 @@
 import logging
 import os
 from datetime import datetime
-from typing import Optional
+from typing import List, Optional
 
 from sqlalchemy import (
     Column,
@@ -16,6 +16,7 @@ from sqlalchemy import (
     String,
     Table,
     create_engine,
+    delete,
     insert,
     select,
     update,
@@ -119,6 +120,15 @@ class DbConnector:
             logging.error(f"Could not update command: {e}")
         return
 
+    def remove_command(self, command_name: str) -> None:
+        try:
+            stmt = delete(self.commands).where(self.commands.c.command_name == command_name)
+            self.conn = self.engine.connect()
+            self.conn.execute(stmt)
+        except Exception as e:
+            logging.error(f"Could not delete {command_name}: {e}")
+        return
+
     def retrive_command_response(self, command_name: str) -> Optional[str]:
         stmt = select(self.commands.c.command_response).where(
             self.commands.c.command_name == command_name
@@ -130,3 +140,15 @@ class DbConnector:
             if row:
                 return row[0]
         return None
+
+    def get_all_commands(self) -> Optional[List[str]]:
+        stmt = select(self.commands.c.command_name)
+        self.conn = self.engine.connect()
+        result = self.conn.execute(stmt)
+        if result:
+            commands_list = result.all()
+            if commands_list:
+                commands_list = [row[0] for row in commands_list]
+                return commands_list
+        else:
+            return None

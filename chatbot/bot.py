@@ -1,6 +1,6 @@
 import re
 from datetime import datetime
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 import irc.bot
 from rich.console import Console
@@ -81,7 +81,7 @@ class Bot(irc.bot.SingleServerIRCBot):
     # consider parsing the other versions of the sub badges and having the start symbol fill up
     # 紐and 留and 硫
     @staticmethod
-    def generate_badge_string(badges: List[str]) -> Optional[str]:
+    def generate_badge_string(badges: List[str]) -> str:
         badge_mapping: Dict[str, str] = {
             "founder": "[#7F45E9] [/#7F45E9]",
             "subscriber": "[#FD3E81]六[/#FD3E81]",
@@ -94,7 +94,7 @@ class Bot(irc.bot.SingleServerIRCBot):
             badges_str.append(badge_mapping.get(badge, ""))
         if badges_str:
             return "".join(badges_str)
-        return None
+        return ""
 
     def on_pubmsg(self, connection, event):
         event_data = self.structure_message(event)
@@ -133,9 +133,10 @@ class Bot(irc.bot.SingleServerIRCBot):
         command_name, command_input = command_match.groups()
 
         command = commands_factory(command_name)
-
         if command_input:
             event_data.update({"command_input": command_input})
+        if command_name:
+            event_data.update({"command_name": command_name})
         if command:
             command_output = ""
             command = command(self.db_connector, self._config, **event_data)  # type: ignore
