@@ -113,6 +113,8 @@ class Bot(irc.bot.SingleServerIRCBot):
             user_country_emoji = user_country_emoji.strip(":")
             if user_country_emoji in list(EMOJI.keys()):
                 user_country_emoji = f":{user_country_emoji}: "
+            else:
+                user_country_emoji = ""
         else:
             user_country_emoji = ""
 
