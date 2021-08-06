@@ -133,9 +133,10 @@ class Bot(irc.bot.SingleServerIRCBot):
         command_name, command_input = command_match.groups()
 
         command = commands_factory(command_name)
-
         if command_input:
             event_data.update({"command_input": command_input})
+        if command_name:
+            event_data.update({"command_name": command_name})
         if command:
             command_output = ""
             command = command(self.db_connector, self._config, **event_data)  # type: ignore

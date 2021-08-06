@@ -6,13 +6,17 @@ import respx
 from httpx import Response
 
 from chatbot.commands import (
+    AddTextCommand,
     BotCommand,
     ListCommandsCommand,
+    RemoveTextCommand,
     SayHelloCommand,
     SetSourceCommand,
+    SetTextCommand,
     SetTodayCommand,
     SetUserCountryCommand,
     SourceCommand,
+    TextCommand,
     TodayCommand,
     UptimeCommand,
 )
@@ -56,10 +60,7 @@ def test_SayHelloCommand(datafiles):
 def test_ListCommandsCommand(datafiles):
     connector = DbConnector(db_path=datafiles)
     cmd = ListCommandsCommand(connector, CONFIG)
-    assert (
-        cmd.run()
-        == "!hello !commands !today !settoday !bot !source !settsource !uptime !setcountry"
-    )
+    assert cmd.run() == "!bot !source !today !hello !commands !uptime !setcountry !set !add !remove"
     assert cmd.is_restricted is False
 
 
@@ -112,7 +113,7 @@ def test_SetTodayCommand(datafiles):
 
     assert today_text is not None
     assert today_text.split("|")[1].strip() == expectation
-    assert set_cmd.is_restricted == True
+    assert set_cmd.is_restricted is True
 
 
 @pytest.mark.datafiles(FIXTURE_DIR)
@@ -142,7 +143,7 @@ def test_SetSourceCommand(datafiles):
     source_text = today.run()
 
     assert source_text == expectation
-    assert set_cmd.is_restricted == True
+    assert set_cmd.is_restricted is True
 
 
 @pytest.mark.parametrize(
@@ -182,3 +183,69 @@ def test_UptimeCommand(datafiles, mock_response, time_offset, expectation, freez
     cmd = UptimeCommand(db_connector=connector, config=CONFIG)
     uptime_response = cmd.run()
     assert uptime_response == expectation
+
+
+@pytest.mark.datafiles(FIXTURE_DIR)
+def test_SetTextCommand(datafiles):
+    expectation = "today this is the new today text set in the test"
+    connector = DbConnector(db_path=datafiles)
+
+    set_cmd = SetTextCommand(connector, CONFIG, command_input=expectation)
+    set_result = set_cmd.run()
+
+    today_cmd = TodayCommand(connector, CONFIG)
+    today_text = today_cmd.run()
+
+    assert set_result == "today command successfully updated"
+    assert today_text.split("|")[1].strip() == "this is the new today text set in the test"
+
+
+@pytest.mark.datafiles(FIXTURE_DIR)
+def test_SetTextCommandNotFound(datafiles):
+    expectation = "not_implemented_command dummy text"
+    connector = DbConnector(db_path=datafiles)
+
+    set_cmd = SetTextCommand(connector, CONFIG, command_input=expectation)
+    set_result = set_cmd.run()
+
+    assert set_cmd.is_restricted is True
+    assert set_result == "not_implemented_command does not exist yet"
+
+
+@pytest.mark.datafiles(FIXTURE_DIR)
+def test_TextCommand(datafiles):
+    expectation = "this is today's text set in the text command"
+    connector = DbConnector(db_path=datafiles)
+
+    SetTextCommand(connector, CONFIG, command_input=f"today {expectation}").run()
+
+    command_response = TextCommand(connector, CONFIG, command_name="today").run()
+
+    assert command_response == expectation
+
+
+@pytest.mark.datafiles(FIXTURE_DIR)
+def test_AddTextCommand(datafiles):
+    expected_response = "this is the new command response"
+    connector = DbConnector(db_path=datafiles)
+
+    cmd = AddTextCommand(connector, CONFIG, "new_command this is the new command response")
+    cmd.run()
+
+    command_response = TextCommand(
+        db_connector=connector, config=CONFIG, command_name="new_command"
+    ).run()
+    assert cmd.is_restricted is True
+    assert command_response == expected_response
+
+
+@pytest.mark.datafiles(FIXTURE_DIR)
+def test_RemoveTextCommand(datafiles):
+    connector = DbConnector(db_path=datafiles)
+
+    AddTextCommand(connector, CONFIG, command_input="to_remove_command dummy text").run()
+    cmd = RemoveTextCommand(connector, CONFIG, command_input="to_remove_command")
+    cmd.run()
+
+    command_response = TextCommand(connector, CONFIG, command_name="to_remove_command").run()
+    assert command_response == "to_remove_command does not exist"

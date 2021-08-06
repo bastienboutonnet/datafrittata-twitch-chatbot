@@ -1,4 +1,5 @@
 import logging
+import re
 from abc import ABC
 from datetime import datetime
 from typing import Dict, List, Optional, Type
@@ -81,7 +82,12 @@ class ListCommandsCommand(BaseCommand):
         super().__init__(db_connector, config)
 
     def run(self):
-        all_commands = " !".join(AVAILABLE_COMMANDS)
+        # TODO: find a way to get commands from the db too
+        db_commands = self.db_connector.get_all_commands()
+        special_comands = list(SPECIAL_COMMANDS.keys())
+        if db_commands is None:
+            db_commands = []
+        all_commands = " !".join(db_commands + special_comands)
         message = f"!{all_commands}"
         return message
 
@@ -145,6 +151,10 @@ class SetUserCountryCommand(BaseCommand):
         self.user_id = kwargs.get("user_id")
         self.user_country = command_input.lower()
 
+    @property
+    def is_restricted(self):
+        return False
+
     def run(self):
         try:
             assert self.user_id is not None
@@ -155,22 +165,110 @@ class SetUserCountryCommand(BaseCommand):
             return None
 
 
-AVAILABLE_COMMANDS: Dict[str, Type[BaseCommand]] = {
+class TextCommand(BaseCommand):
+    def __init__(self, db_connector: DbConnector, config: Config, **kwargs):
+        super().__init__(db_connector, config)
+        self.command_name = kwargs.get("command_name", "no command name")
+
+    def run(self) -> Optional[str]:
+        command_response = self.db_connector.retrive_command_response(
+            command_name=self.command_name
+        )
+        if command_response is not None:
+            return command_response
+        else:
+            return f"{self.command_name} does not exist"
+
+
+class TextCommandSetter(BaseCommand):
+    def __init__(self, db_connector: DbConnector, config: Config, command_input: str, **kwargs):
+        super().__init__(db_connector, config)
+        self.command_input = command_input
+
+    @property
+    def is_restricted(self):
+        return True
+
+    def match_command(self):
+        self.mactched_command = re.match(
+            r"^(?P<command_name>\w+)\s?(?P<command_response>.*)", self.command_input
+        )
+        if self.mactched_command is not None:
+            self.command_name, self.command_response = self.mactched_command.groups()
+
+    def run(self):
+        pass
+
+
+class SetTextCommand(TextCommandSetter):
+    def __init__(self, db_connector: DbConnector, config: Config, command_input: str, **kwargs):
+        super().__init__(db_connector, config, command_input)
+        self.match_command()
+
+    def run(self):
+        if self.command_name and self.command_response:
+            # TODO: maybe we want to load the commands in a global so that we don't query the db every time
+            command_exists = self.db_connector.retrive_command_response(
+                command_name=self.command_name
+            )
+            if command_exists:
+                self.db_connector.update_command(
+                    command_name=self.command_name, command_response=self.command_response
+                )
+                return f"{self.command_name} command successfully updated"
+            else:
+                return f"{self.command_name} does not exist yet"
+        else:
+            return None
+
+
+class AddTextCommand(TextCommandSetter):
+    def __init__(self, db_connector: DbConnector, config: Config, command_input: str, **kwargs):
+        super().__init__(db_connector, config, command_input, **kwargs)
+        self.match_command()
+
+    def run(self):
+        if self.command_name and self.command_input:
+            command_exists = self.db_connector.retrive_command_response(
+                command_name=self.command_name
+            )
+            if command_exists:
+                return f"{self.command_name} already exist use !set to update it"
+            else:
+                self.db_connector.add_new_command(
+                    command_name=self.command_name, command_response=self.command_response
+                )
+                return f"{self.command_name} command successfully added"
+
+
+class RemoveTextCommand(TextCommandSetter):
+    def __init__(self, db_connector: DbConnector, config: Config, command_input: str, **kwargs):
+        super().__init__(db_connector, config, command_input, **kwargs)
+        self.match_command()
+
+    def run(self) -> Optional[str]:
+        if self.command_name:
+            self.db_connector.remove_command(self.command_name)
+            return f"{self.command_name} successfully removed"
+
+
+SPECIAL_COMMANDS: Dict[str, Type[BaseCommand]] = {
     "hello": SayHelloCommand,
     "commands": ListCommandsCommand,
-    "today": TodayCommand,
-    "settoday": SetTodayCommand,
-    "bot": BotCommand,
-    "source": SourceCommand,
-    "settsource": SetSourceCommand,
     "uptime": UptimeCommand,
     "setcountry": SetUserCountryCommand,
+    "set": SetTextCommand,
+    "add": AddTextCommand,
+    "remove": RemoveTextCommand,
 }
-COMMANDS_TO_IGNORE: List[str] = ["drop", "keyboard", "dj", "frittata", "work", "discord"]
+COMMANDS_TO_IGNORE: List[str] = ["drop"]
 
 
 def commands_factory(command_name: str) -> Optional[Type[BaseCommand]]:
-    try:
-        return AVAILABLE_COMMANDS[command_name]
-    except KeyError:
+    command = SPECIAL_COMMANDS.get(command_name)
+    if command is not None:
+        return command
+    elif command_name not in COMMANDS_TO_IGNORE:
+        return TextCommand
+    else:
         return None
