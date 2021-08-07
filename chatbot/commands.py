@@ -48,7 +48,6 @@ class ShoutoutCommand(BaseCommand):
             "Client-ID": self.config.client_id_api,
         }
         channel_search_response = httpx.get(search_channel_url, headers=headers)
-        print(channel_search_response)
 
         if channel_search_response.status_code == 200:
             channel_search_response_json = channel_search_response.json()
