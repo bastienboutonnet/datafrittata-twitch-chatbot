@@ -22,6 +22,7 @@ pytest-cov = "^2.12.1"
 respx = "^0.17.1"
 freezegun = "^1.1.0"
 pytest-freezegun = "^0.4.2"
+pytest-datafiles = "^2.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

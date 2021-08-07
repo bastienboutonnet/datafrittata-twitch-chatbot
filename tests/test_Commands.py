@@ -1,4 +1,5 @@
 import os
+import re
 from pathlib import Path
 
 import pytest
@@ -15,6 +16,7 @@ from chatbot.commands import (
     SetTextCommand,
     SetTodayCommand,
     SetUserCountryCommand,
+    ShoutoutCommand,
     SourceCommand,
     TextCommand,
     TodayCommand,
@@ -60,7 +62,10 @@ def test_SayHelloCommand(datafiles):
 def test_ListCommandsCommand(datafiles):
     connector = DbConnector(db_path=datafiles)
     cmd = ListCommandsCommand(connector, CONFIG)
-    assert cmd.run() == "!bot !source !today !hello !commands !uptime !setcountry !set !add !remove"
+    assert (
+        cmd.run()
+        == "!bot !source !today !hello !commands !uptime !setcountry !set !add !remove !so"
+    )
     assert cmd.is_restricted is False
 
 
@@ -183,6 +188,48 @@ def test_UptimeCommand(datafiles, mock_response, time_offset, expectation, freez
     cmd = UptimeCommand(db_connector=connector, config=CONFIG)
     uptime_response = cmd.run()
     assert uptime_response == expectation
+
+
+@pytest.mark.parametrize(
+    "mock_response, user_name, expectation",
+    [
+        pytest.param(
+            {"data": [{"display_name": "DataFrittata", "broadcaster_login": "datafrittata"}]},
+            "@DataFrittata",
+            "You should check out DataFrittata or give them a follow here: https://twitch.tv/datafrittata <3",
+            id="user exists and is provided with @",
+        ),
+        pytest.param(
+            {"data": [{"display_name": "DataFrittata", "broadcaster_login": "datafrittata"}]},
+            "DataFrittata",
+            "You should check out DataFrittata or give them a follow here: https://twitch.tv/datafrittata <3",
+            id="user exists and is provided without @",
+        ),
+        pytest.param(
+            {"data": []},
+            "doesntexistuser",
+            "doesntexistuser doesn't seem to exist",
+            id="user does not exists",
+        ),
+        pytest.param(
+            {"data": [{"display_name": "DataFrittata", "broadcaster_login": "datafrittata"}]},
+            "DataFritat",
+            "DataFritat is not a valid user",
+            id="is not a valid user",
+        ),
+    ],
+)
+@pytest.mark.datafiles(FIXTURE_DIR)
+@respx.mock
+def test_ShoutoutCommand(datafiles, mock_response, user_name, expectation):
+    connector = DbConnector(db_path=datafiles)
+    response = Response(status_code=200, json=mock_response)
+    url_pattern = re.compile(r"^https://api.twitch.tv/helix/search/channels.*$")
+    respx.get(url_pattern).mock(return_value=response)
+
+    cmd = ShoutoutCommand(db_connector=connector, config=CONFIG, command_input=user_name)
+    shoutout_response = cmd.run()
+    assert shoutout_response == expectation
 
 
 @pytest.mark.datafiles(FIXTURE_DIR)

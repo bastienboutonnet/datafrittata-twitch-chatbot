@@ -476,6 +476,18 @@ toml = "*"
 testing = ["fields", "hunter", "process-tests", "six", "pytest-xdist", "virtualenv"]
 
 [[package]]
+name = "pytest-datafiles"
+version = "2.0"
+description = "py.test plugin to create a 'tmpdir' containing predefined files/directories."
+category = "dev"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+py = "*"
+pytest = ">=3.6"
+
+[[package]]
 name = "pytest-dependency"
 version = "0.5.1"
 description = "Manage dependencies of tests"
@@ -678,7 +690,7 @@ testing = ["coverage (>=4)", "coverage-enable-subprocess (>=1)", "flaky (>=3)", 
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "e9e62345e8e75f908f7cc6f34f10d8774bd4c5ebe71f1ad7a25bc3af6d46b1e6"
+content-hash = "9811cfff50acfeb6706fb4ae2e0f4d5e2641c3ee314e5d63c3f198e1c55e2e30"
 
 [metadata.files]
 anyio = [
@@ -978,6 +990,10 @@ pytest = [
 pytest-cov = [
     {file = "pytest-cov-2.12.1.tar.gz", hash = "sha256:261ceeb8c227b726249b376b8526b600f38667ee314f910353fa318caa01f4d7"},
     {file = "pytest_cov-2.12.1-py2.py3-none-any.whl", hash = "sha256:261bb9e47e65bd099c89c3edf92972865210c36813f80ede5277dceb77a4a62a"},
+]
+pytest-datafiles = [
+    {file = "pytest-datafiles-2.0.tar.gz", hash = "sha256:143329cbb1dbbb07af24f88fa4668e2f59ce233696cf12c49fd1c98d1756dbf9"},
+    {file = "pytest_datafiles-2.0-py2.py3-none-any.whl", hash = "sha256:e349b6ad7bcca111f3677b7201d3ca81f93b5e09dcfae8ee2be2c3cae9f55bc7"},
 ]
 pytest-dependency = [
     {file = "pytest-dependency-0.5.1.tar.gz", hash = "sha256:c2a892906192663f85030a6ab91304e508e546cddfe557d692d61ec57a1d946b"},

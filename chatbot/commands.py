@@ -30,6 +30,45 @@ class BaseCommand(ABC):
         raise NotImplementedError
 
 
+class ShoutoutCommand(BaseCommand):
+    def __init__(self, db_connector: DbConnector, config: Config, command_input: str, **kwargs):
+        self.db_connector = db_connector
+        self.config = config
+        self.command_input = command_input
+
+    @property
+    def is_restricted(self):
+        return True
+
+    def run(self) -> Optional[str]:
+        user_name = self.command_input.strip("@")
+        search_channel_url = f"https://api.twitch.tv/helix/search/channels?query={user_name}"
+        headers = {
+            "Authorization": f"Bearer {self.config.bot_api_token}",
+            "Client-ID": self.config.client_id_api,
+        }
+        channel_search_response = httpx.get(search_channel_url, headers=headers)
+        print(channel_search_response)
+
+        if channel_search_response.status_code == 200:
+            channel_search_response_json = channel_search_response.json()
+            if channel_search_response_json.get("data"):
+                channel_data = channel_search_response_json["data"][0]
+                display_name = channel_data["display_name"]
+                url_suffix = channel_data["broadcaster_login"]
+                if user_name.lower() == url_suffix:
+                    return (
+                        f"You should check out {display_name} or give them a follow here: "
+                        f"https://twitch.tv/{url_suffix} <3"
+                    )
+                else:
+                    return f"{user_name} is not a valid user"
+            else:
+                return f"{user_name} doesn't seem to exist"
+        else:
+            return None
+
+
 class UptimeCommand(BaseCommand):
     # TODO: introduce a cool down period for the api call but this might be hard
     # to test without having to introduce sleep and make the tests slow as hell to run.
@@ -260,6 +299,7 @@ SPECIAL_COMMANDS: Dict[str, Type[BaseCommand]] = {
     "set": SetTextCommand,
     "add": AddTextCommand,
     "remove": RemoveTextCommand,
+    "so": ShoutoutCommand,
 }
 COMMANDS_TO_IGNORE: List[str] = ["drop"]
 
