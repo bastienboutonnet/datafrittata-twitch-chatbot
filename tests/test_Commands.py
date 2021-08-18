@@ -315,6 +315,21 @@ def test_AddZodiacCommand(datafiles):
 
 
 @pytest.mark.datafiles(FIXTURE_DIR)
+def test_AddZodiacCommand_invalid_sign(datafiles):
+    sign = "tau"
+    expectation = "tau is not a valid zodiac sign"
+    connector = DbConnector(db_path=datafiles)
+
+    connector.add_new_user(user_id="999", user_name="test_user")
+
+    add_command_return = AddZodiacSignCommand(
+        connector, CONFIG, command_input=sign, user_id="999"
+    ).run()
+
+    assert add_command_return == expectation
+
+
+@pytest.mark.datafiles(FIXTURE_DIR)
 @respx.mock
 def test_HoroscopeCommand(datafiles):
     exp = "It's hard to be a Taurus"
