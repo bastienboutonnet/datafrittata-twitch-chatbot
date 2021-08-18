@@ -295,6 +295,20 @@ class AddZodiacSignCommand(BaseCommand):
         super().__init__(db_connector, config)
         self.user_id = kwargs.get("user_id")
         self.user_sign = command_input.lower()
+        self.acceptable_signs = [
+            "aquarius",
+            "pisces",
+            "aries",
+            "taurus",
+            "gemini",
+            "cancer",
+            "leo",
+            "virgo",
+            "libra",
+            "scorpio",
+            "sagittarius",
+            "capricorn",
+        ]
 
     # TODO: Make sure to write a valid sign input step so that we can warn the users
     # before we try to insert it and query it from the API
@@ -306,7 +320,12 @@ class AddZodiacSignCommand(BaseCommand):
     def run(self):
         try:
             assert self.user_id is not None
-            self.db_connector.update_user_sign(user_id=self.user_id, zodiac_sign=self.user_sign)
+            if self.user_sign.lower() in self.acceptable_signs:
+                self.db_connector.update_user_sign(
+                    user_id=self.user_id, zodiac_sign=self.user_sign.lower()
+                )
+            else:
+                return f"{self.user_sign} is not a valid zodiac sign"
         except AssertionError:
             logging.error(f"{self.user_id} could not be found in the database")
             return None
