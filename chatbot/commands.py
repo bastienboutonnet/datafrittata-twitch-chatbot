@@ -294,6 +294,7 @@ class AddZodiacSignCommand(BaseCommand):
     def __init__(self, db_connector: DbConnector, config: Config, command_input: str, **kwargs):
         super().__init__(db_connector, config)
         self.user_id = kwargs.get("user_id")
+        self.user_name = kwargs.get("user_name")
         self.user_sign = command_input.lower()
         self.acceptable_signs = [
             "aquarius",
@@ -322,7 +323,7 @@ class AddZodiacSignCommand(BaseCommand):
             else:
                 return f"{self.user_sign} is not a valid zodiac sign"
         except AssertionError:
-            logging.error(f"{self.user_id} could not be found in the database")
+            logging.error(f"{self.user_name} could not be found in the database")
             return None
 
 
