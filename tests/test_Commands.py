@@ -4,11 +4,14 @@ from pathlib import Path
 
 import pytest
 import respx
+from dateutil import parser
 from httpx import Response
 
 from chatbot.commands import (
     AddTextCommand,
+    AddZodiacSignCommand,
     BotCommand,
+    HoroscopeCommand,
     ListCommandsCommand,
     RemoveTextCommand,
     SayHelloCommand,
@@ -64,7 +67,7 @@ def test_ListCommandsCommand(datafiles):
     cmd = ListCommandsCommand(connector, CONFIG)
     assert (
         cmd.run()
-        == "!bot !source !today !hello !commands !uptime !setcountry !set !add !remove !so"
+        == "!bot !source !today !hello !commands !uptime !setcountry !set !add !remove !so !addzodiacsign !horoscope"
     )
     assert cmd.is_restricted is False
 
@@ -296,3 +299,46 @@ def test_RemoveTextCommand(datafiles):
 
     command_response = TextCommand(connector, CONFIG, command_name="to_remove_command").run()
     assert command_response == "to_remove_command does not exist"
+
+
+@pytest.mark.datafiles(FIXTURE_DIR)
+def test_AddZodiacCommand(datafiles):
+    sign = "taurus"
+    connector = DbConnector(db_path=datafiles)
+
+    connector.add_new_user(user_id="999", user_name="test_user")
+
+    AddZodiacSignCommand(connector, CONFIG, command_input=sign, user_id="999").run()
+    user_sign = connector.get_user_sign(user_id="999")
+
+    assert user_sign == sign
+
+
+@pytest.mark.datafiles(FIXTURE_DIR)
+def test_AddZodiacCommand_invalid_sign(datafiles):
+    sign = "tau"
+    expectation = "tau is not a valid zodiac sign"
+    connector = DbConnector(db_path=datafiles)
+
+    connector.add_new_user(user_id="999", user_name="test_user")
+
+    add_command_return = AddZodiacSignCommand(
+        connector, CONFIG, command_input=sign, user_id="999"
+    ).run()
+
+    assert add_command_return == expectation
+
+
+@pytest.mark.datafiles(FIXTURE_DIR)
+@respx.mock
+def test_HoroscopeCommand(datafiles):
+    exp = "It's hard to be a Taurus"
+    connector = DbConnector(db_path=datafiles)
+    connector.add_new_user(user_id="999", user_name="test_user")
+    AddZodiacSignCommand(connector, CONFIG, command_input="taurus", user_id="999").run()
+
+    response = Response(status_code=200, json={"horoscope": exp})
+    respx.get("https://ohmanda.com/api/horoscope/taurus").mock(return_value=response)
+
+    horoscope_text = HoroscopeCommand(connector, CONFIG, user_id="999").run()
+    assert horoscope_text == f"Taurus: {exp}"

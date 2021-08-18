@@ -290,6 +290,74 @@ class RemoveTextCommand(TextCommandSetter):
             return f"{self.command_name} successfully removed"
 
 
+class AddZodiacSignCommand(BaseCommand):
+    def __init__(self, db_connector: DbConnector, config: Config, command_input: str, **kwargs):
+        super().__init__(db_connector, config)
+        self.user_id = kwargs.get("user_id")
+        self.user_sign = command_input.lower()
+        self.acceptable_signs = [
+            "aquarius",
+            "pisces",
+            "aries",
+            "taurus",
+            "gemini",
+            "cancer",
+            "leo",
+            "virgo",
+            "libra",
+            "scorpio",
+            "sagittarius",
+            "capricorn",
+        ]
+
+    @property
+    def is_restricted(self):
+        return False
+
+    def run(self):
+        try:
+            assert self.user_id is not None
+            if self.user_sign in self.acceptable_signs:
+                self.db_connector.update_user_sign(user_id=self.user_id, zodiac_sign=self.user_sign)
+            else:
+                return f"{self.user_sign} is not a valid zodiac sign"
+        except AssertionError:
+            logging.error(f"{self.user_id} could not be found in the database")
+            return None
+
+
+class HoroscopeCommand(BaseCommand):
+    def __init__(self, db_connector: DbConnector, config: Config, **kwargs):
+        super().__init__(db_connector, config)
+        self.user_id = kwargs.get("user_id")
+        self.user_name = kwargs.get("user_name")
+
+    def run(self) -> Optional[str]:
+        base_url = "https://ohmanda.com/api/horoscope/"
+        try:
+            assert self.user_id is not None
+
+            user_sign = self.db_connector.get_user_sign(self.user_id)
+
+            if user_sign:
+                horoscope_data = httpx.get(f"{base_url}{user_sign}")
+                if horoscope_data.status_code == 200:
+                    horoscope_data = horoscope_data.json()
+                    horoscope_text = (
+                        f"{user_sign.title()}: "
+                        f"{horoscope_data.get('horoscope', 'Did not get a horoscope from the API')}"
+                    )
+                    return horoscope_text
+                else:
+                    return (
+                        f"Something went wrong with the API when getting horoscope for {user_sign}"
+                    )
+            else:
+                return f"could not find {self.user_name}'s sign in the database"
+        except Exception:
+            raise
+
+
 SPECIAL_COMMANDS: Dict[str, Type[BaseCommand]] = {
     "hello": SayHelloCommand,
     "commands": ListCommandsCommand,
@@ -299,6 +367,8 @@ SPECIAL_COMMANDS: Dict[str, Type[BaseCommand]] = {
     "add": AddTextCommand,
     "remove": RemoveTextCommand,
     "so": ShoutoutCommand,
+    "addzodiacsign": AddZodiacSignCommand,
+    "horoscope": HoroscopeCommand,
 }
 COMMANDS_TO_IGNORE: List[str] = ["drop"]
 

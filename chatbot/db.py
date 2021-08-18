@@ -50,6 +50,7 @@ class DbConnector:
             Column("user_name", String()),
             Column("country", String()),
             Column("first_chatted_at", DateTime()),
+            Column("zodiac_sign", String()),
         )
 
         self.metadata.create_all(self.engine)
@@ -70,6 +71,30 @@ class DbConnector:
             self.conn = self.engine.connect()
             self.conn.execute(stmt)
         except IntegrityError:
+            return None
+
+    def update_user_sign(self, user_id: str, zodiac_sign: str) -> None:
+        try:
+            stmt = (
+                update(self.users)
+                .where(self.users.c.user_id == user_id)
+                .values(zodiac_sign=zodiac_sign.lower())
+            )
+            self.conn = self.engine.connect()
+            self.conn.execute(stmt)
+        except Exception as e:
+            logging.error(f"Could not update user's zodiac sign: {e}")
+        return
+
+    def get_user_sign(self, user_id: str) -> Optional[str]:
+        stmt = select(self.users.c.zodiac_sign).where(self.users.c.user_id == user_id)
+        self.conn = self.engine.connect()
+        result = self.conn.execute(stmt)
+        if result:
+            row = result.fetchone()
+            if row:
+                return row[0]
+        else:
             return None
 
     def update_user_country(self, user_id: str, user_country: str) -> None:
