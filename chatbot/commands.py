@@ -310,9 +310,6 @@ class AddZodiacSignCommand(BaseCommand):
             "capricorn",
         ]
 
-    # TODO: Make sure to write a valid sign input step so that we can warn the users
-    # before we try to insert it and query it from the API
-
     @property
     def is_restricted(self):
         return False
@@ -320,10 +317,8 @@ class AddZodiacSignCommand(BaseCommand):
     def run(self):
         try:
             assert self.user_id is not None
-            if self.user_sign.lower() in self.acceptable_signs:
-                self.db_connector.update_user_sign(
-                    user_id=self.user_id, zodiac_sign=self.user_sign.lower()
-                )
+            if self.user_sign in self.acceptable_signs:
+                self.db_connector.update_user_sign(user_id=self.user_id, zodiac_sign=self.user_sign)
             else:
                 return f"{self.user_sign} is not a valid zodiac sign"
         except AssertionError:
