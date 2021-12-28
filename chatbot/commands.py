@@ -83,7 +83,6 @@ class UptimeCommand(BaseCommand):
         }
         response = httpx.get(url, headers=headers)
         response_json = response.json()
-
         if response_json.get("data", []):
             start_time = response_json["data"][0]["started_at"]
             # timestamp comes back in UTC so we need to compare to a UTC now later.
@@ -121,12 +120,15 @@ class ListCommandsCommand(BaseCommand):
 
     def run(self):
         # TODO: find a way to get commands from the db too
-        db_commands = self.db_connector.get_all_commands()
+        db_commands, aliased_commands = self.db_connector.get_all_commands()
         special_comands = list(SPECIAL_COMMANDS.keys())
         if db_commands is None:
             db_commands = []
         all_commands = " !".join(db_commands + special_comands)
         message = f"!{all_commands}"
+        if aliased_commands:
+            aliased_commands_str_list = " !".join(aliased_commands)
+            message += f" Aliases: !{aliased_commands_str_list}"
         return message
 
 
@@ -209,6 +211,11 @@ class TextCommand(BaseCommand):
         self.command_name = kwargs.get("command_name", "no command name")
 
     def run(self) -> Optional[str]:
+        # check if command is an alias
+        aliased_command = self.db_connector.get_original_command(self.command_name)
+        if aliased_command:
+            print(f"{self.command_name} is mapped to {aliased_command}")
+            self.command_name = aliased_command
         command_response = self.db_connector.retrive_command_response(
             command_name=self.command_name
         )
@@ -277,6 +284,28 @@ class AddTextCommand(TextCommandSetter):
                     command_name=self.command_name, command_response=self.command_response
                 )
                 return f"{self.command_name} command successfully added"
+
+
+class AddAliasCommand(TextCommandSetter):
+    def __init__(self, db_connector: DbConnector, config: Config, command_input: str, **kwargs):
+        super().__init__(db_connector, config, command_input, **kwargs)
+        self.match_command()
+
+    def run(self):
+        # DON'T MISS THIS:
+        # command name maps to the ALIAS
+        # command_response mapts to the MAPPED/OG Command
+        if self.command_name and self.command_response:
+            if self.command_response in SPECIAL_COMMANDS.keys():
+                return f"'{self.command_response}' is a special command and cannot be aliased"
+            command_exists = self.db_connector.retrive_command_response(
+                command_name=self.command_response
+            )
+            if command_exists:
+                self.db_connector.add_command_alias(self.command_name, self.command_response)
+                return f"You can now get !{self.command_response} by typing !{self.command_name}"
+            else:
+                return f"{self.command_response} does not exist, so it can't be aliased..."
 
 
 class RemoveTextCommand(TextCommandSetter):
@@ -370,6 +399,7 @@ SPECIAL_COMMANDS: Dict[str, Type[BaseCommand]] = {
     "so": ShoutoutCommand,
     "addzodiacsign": AddZodiacSignCommand,
     "horoscope": HoroscopeCommand,
+    "alias": AddAliasCommand,
 }
 COMMANDS_TO_IGNORE: List[str] = ["drop"]
 

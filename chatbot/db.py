@@ -7,7 +7,7 @@
 import logging
 import os
 from datetime import datetime
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 from sqlalchemy import (
     Column,
@@ -51,6 +51,13 @@ class DbConnector:
             Column("country", String()),
             Column("first_chatted_at", DateTime()),
             Column("zodiac_sign", String()),
+        )
+
+        self.aliases = Table(
+            "command_aliases",
+            self.metadata,
+            Column("alias_name", String(), primary_key=True),
+            Column("aliased_command_name", String()),
         )
 
         self.metadata.create_all(self.engine)
@@ -131,6 +138,31 @@ class DbConnector:
             print("command already exists, use a set<command> if you want to change its content")
         return
 
+    def add_command_alias(self, alias_name: str, aliased_command_name: str) -> None:
+        print(f"Aliasing '{alias_name}' to '{aliased_command_name}'")
+        try:
+            stmt = insert(self.aliases).values((alias_name, aliased_command_name))
+            self.conn = self.engine.connect()
+            self.conn.execute(stmt)
+        except IntegrityError:
+            print(
+                f"Alias: {alias_name} is already assigned, remove it and reassign it, if that's what you want to do"
+            )
+        return
+
+    def get_original_command(self, command_name: str) -> Optional[str]:
+        stmt = select(self.aliases.c.aliased_command_name).where(
+            self.aliases.c.alias_name == command_name
+        )
+        self.conn = self.engine.connect()
+        result = self.conn.execute(stmt)
+        if result:
+            row = result.fetchone()
+            if row:
+                return row[0]
+        else:
+            return
+
     def update_command(self, command_name: str, command_response: str) -> None:
         print(f"Updating {command_name} with: {command_response}")
         try:
@@ -166,14 +198,22 @@ class DbConnector:
                 return row[0]
         return None
 
-    def get_all_commands(self) -> Optional[List[str]]:
-        stmt = select(self.commands.c.command_name)
+    def get_all_commands(self) -> Tuple[Optional[List[str]], Optional[List[str]]]:
+        main_commands_stmt = select(self.commands.c.command_name)
         self.conn = self.engine.connect()
-        result = self.conn.execute(stmt)
+        result = self.conn.execute(main_commands_stmt)
+        aliases_stmt = select(self.aliases.c.alias_name)
+        self.conn = self.engine.connect()
+        aliases_result = self.conn.execute(aliases_stmt)
+        aliases_list = None
         if result:
             commands_list = result.all()
             if commands_list:
                 commands_list = [row[0] for row in commands_list]
-                return commands_list
+                if aliases_result:
+                    aliases_list = aliases_result.all()
+                    aliases_list = [row[0] for row in aliases_list]
+                return commands_list, aliases_list
+            return None, None
         else:
-            return None
+            return None, None
