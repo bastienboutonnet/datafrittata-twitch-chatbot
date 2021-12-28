@@ -120,12 +120,15 @@ class ListCommandsCommand(BaseCommand):
 
     def run(self):
         # TODO: find a way to get commands from the db too
-        db_commands = self.db_connector.get_all_commands()
+        db_commands, aliased_commands = self.db_connector.get_all_commands()
         special_comands = list(SPECIAL_COMMANDS.keys())
         if db_commands is None:
             db_commands = []
         all_commands = " !".join(db_commands + special_comands)
         message = f"!{all_commands}"
+        if aliased_commands:
+            aliased_commands_str_list = " !".join(aliased_commands)
+            message += f" Aliases: !{aliased_commands_str_list}"
         return message
 
 
@@ -294,8 +297,7 @@ class AddAliasCommand(TextCommandSetter):
         # command_response mapts to the MAPPED/OG Command
         if self.command_name and self.command_response:
             if self.command_response in SPECIAL_COMMANDS.keys():
-                print(f"{self.command_response} is a special command and cannot be aliased")
-                return
+                return f"'{self.command_response}' is a special command and cannot be aliased"
             command_exists = self.db_connector.retrive_command_response(
                 command_name=self.command_response
             )

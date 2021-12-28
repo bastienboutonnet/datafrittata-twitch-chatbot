@@ -7,7 +7,7 @@
 import logging
 import os
 from datetime import datetime
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 from sqlalchemy import (
     Column,
@@ -198,14 +198,22 @@ class DbConnector:
                 return row[0]
         return None
 
-    def get_all_commands(self) -> Optional[List[str]]:
-        stmt = select(self.commands.c.command_name)
+    def get_all_commands(self) -> Tuple[Optional[List[str]], Optional[List[str]]]:
+        main_commands_stmt = select(self.commands.c.command_name)
         self.conn = self.engine.connect()
-        result = self.conn.execute(stmt)
+        result = self.conn.execute(main_commands_stmt)
+        aliases_stmt = select(self.aliases.c.alias_name)
+        self.conn = self.engine.connect()
+        aliases_result = self.conn.execute(aliases_stmt)
+        aliases_list = None
         if result:
             commands_list = result.all()
             if commands_list:
                 commands_list = [row[0] for row in commands_list]
-                return commands_list
+                if aliases_result:
+                    aliases_list = aliases_result.all()
+                    aliases_list = [row[0] for row in aliases_list]
+                return commands_list, aliases_list
+            return None, None
         else:
-            return None
+            return None, None
