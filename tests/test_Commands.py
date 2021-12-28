@@ -8,6 +8,7 @@ from dateutil import parser
 from httpx import Response
 
 from chatbot.commands import (
+    AddAliasCommand,
     AddTextCommand,
     AddZodiacSignCommand,
     BotCommand,
@@ -24,7 +25,6 @@ from chatbot.commands import (
     TextCommand,
     TodayCommand,
     UptimeCommand,
-    AddAliasCommand,
 )
 from chatbot.db import DbConnector
 
