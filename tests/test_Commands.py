@@ -24,6 +24,7 @@ from chatbot.commands import (
     TextCommand,
     TodayCommand,
     UptimeCommand,
+    AddAliasCommand,
 )
 from chatbot.db import DbConnector
 
@@ -67,7 +68,7 @@ def test_ListCommandsCommand(datafiles):
     cmd = ListCommandsCommand(connector, CONFIG)
     assert (
         cmd.run()
-        == "!bot !source !today !hello !commands !uptime !setcountry !set !add !remove !so !addzodiacsign !horoscope"
+        == "!bot !source !today !hello !commands !uptime !setcountry !set !add !remove !so !addzodiacsign !horoscope !alias"
     )
     assert cmd.is_restricted is False
 
@@ -262,14 +263,33 @@ def test_SetTextCommandNotFound(datafiles):
     assert set_result == "not_implemented_command does not exist yet"
 
 
+@pytest.mark.parametrize(
+    "command_name, is_alias, expectation",
+    [
+        pytest.param(
+            "today",
+            False,
+            "this is today's text set in the text command",
+            id="command exists and is not aliased",
+        ),
+        pytest.param(
+            "aliased_today",
+            True,
+            "this is today's text set in the text command",
+            id="command exists and is aliased first",
+        ),
+    ],
+)
 @pytest.mark.datafiles(FIXTURE_DIR)
-def test_TextCommand(datafiles):
-    expectation = "this is today's text set in the text command"
+def test_TextCommand(datafiles, command_name, is_alias, expectation):
     connector = DbConnector(db_path=datafiles)
 
     SetTextCommand(connector, CONFIG, command_input=f"today {expectation}").run()
+    if is_alias:
+        alias_cmd = AddAliasCommand(connector, CONFIG, f"{command_name} today")
+        alias_cmd.run()
 
-    command_response = TextCommand(connector, CONFIG, command_name="today").run()
+    command_response = TextCommand(connector, CONFIG, command_name=f"{command_name}").run()
 
     assert command_response == expectation
 
@@ -287,6 +307,41 @@ def test_AddTextCommand(datafiles):
     ).run()
     assert cmd.is_restricted is True
     assert command_response == expected_response
+
+
+@pytest.mark.parametrize(
+    "alias_name, command_name, add_first, expectation",
+    [
+        pytest.param(
+            "aliased_new",
+            "to_alias_command",
+            True,
+            "You can now get !to_alias_command by typing !aliased_new",
+            id="command aliased properly",
+        ),
+        pytest.param(
+            "aliased_new_new",
+            "to_be_aliased_missing",
+            False,
+            "to_be_aliased_missing does not exist, so it can't be aliased...",
+            id="original command does not exist",
+        ),
+    ],
+)
+@pytest.mark.datafiles(FIXTURE_DIR)
+def test_AddAliasCommand(datafiles, alias_name, command_name, add_first, expectation):
+    connector = DbConnector(db_path=datafiles)
+
+    if add_first:
+        add_cmd = AddTextCommand(
+            connector, CONFIG, f"{command_name} this is the new command response"
+        )
+        add_cmd.run()
+
+    cmd = AddAliasCommand(connector, CONFIG, f"{alias_name} {command_name}")
+    alias_result = cmd.run()
+    assert cmd.is_restricted is True
+    assert alias_result == expectation
 
 
 @pytest.mark.datafiles(FIXTURE_DIR)

@@ -53,6 +53,13 @@ class DbConnector:
             Column("zodiac_sign", String()),
         )
 
+        self.aliases = Table(
+            "command_aliases",
+            self.metadata,
+            Column("alias_name", String(), primary_key=True),
+            Column("aliased_command_name", String()),
+        )
+
         self.metadata.create_all(self.engine)
 
         self.add_new_command("today", "today is not set yet")
@@ -130,6 +137,31 @@ class DbConnector:
         except IntegrityError:
             print("command already exists, use a set<command> if you want to change its content")
         return
+
+    def add_command_alias(self, alias_name: str, aliased_command_name: str) -> None:
+        print(f"Aliasing '{alias_name}' to '{aliased_command_name}'")
+        try:
+            stmt = insert(self.aliases).values((alias_name, aliased_command_name))
+            self.conn = self.engine.connect()
+            self.conn.execute(stmt)
+        except IntegrityError:
+            print(
+                f"Alias: {alias_name} is already assigned, remove it and reassign it, if that's what you want to do"
+            )
+        return
+
+    def get_original_command(self, command_name: str) -> Optional[str]:
+        stmt = select(self.aliases.c.aliased_command_name).where(
+            self.aliases.c.alias_name == command_name
+        )
+        self.conn = self.engine.connect()
+        result = self.conn.execute(stmt)
+        if result:
+            row = result.fetchone()
+            if row:
+                return row[0]
+        else:
+            return
 
     def update_command(self, command_name: str, command_response: str) -> None:
         print(f"Updating {command_name} with: {command_response}")
