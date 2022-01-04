@@ -68,7 +68,7 @@ def test_ListCommandsCommand(datafiles):
     cmd = ListCommandsCommand(connector, CONFIG)
     assert (
         cmd.run()
-        == "!bot !source !today !hello !commands !uptime !setcountry !set !add !remove !so !addzodiacsign !horoscope !alias"
+        == "!bot !source !today !hello !commands !uptime !setcountry !setemoji !listemojis !set !add !remove !so !addzodiacsign !horoscope !alias"
     )
     assert cmd.is_restricted is False
 
