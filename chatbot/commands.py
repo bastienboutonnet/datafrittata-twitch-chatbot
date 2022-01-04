@@ -52,16 +52,21 @@ class ShoutoutCommand(BaseCommand):
         if channel_search_response.status_code == 200:
             channel_search_response_json = channel_search_response.json()
             if channel_search_response_json.get("data"):
-                channel_data = channel_search_response_json["data"][0]
-                display_name = channel_data["display_name"]
-                url_suffix = channel_data["broadcaster_login"]
-                if user_name.lower() == url_suffix:
+                user_info = [
+                    user if user["broadcaster_login"] == user_name.lower() else None
+                    for user in channel_search_response_json["data"]
+                ]
+                found_user = list(filter(None, user_info))
+                if found_user:
+                    channel_data = found_user[0]
+                    display_name = channel_data["display_name"]
+                    url_suffix = channel_data["broadcaster_login"]
                     return (
                         f"You should check out {display_name} or give them a follow here: "
                         f"https://twitch.tv/{url_suffix} <3"
                     )
                 else:
-                    return f"{user_name} is not a valid user"
+                    return f"{user_name} is not a valid user. Or could not be found"
             else:
                 return f"{user_name} doesn't seem to exist"
         else:
