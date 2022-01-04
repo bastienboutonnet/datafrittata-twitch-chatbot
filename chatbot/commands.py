@@ -6,6 +6,7 @@ from typing import Dict, List, Optional, Type
 
 import httpx
 from irc.client import ServerConnection
+from rich.emoji import EMOJI
 
 from chatbot.config import Config
 from chatbot.db import DbConnector
@@ -210,6 +211,32 @@ class SetUserCountryCommand(BaseCommand):
             return None
 
 
+class SetUserEmojiCommand(BaseCommand):
+    def __init__(self, db_connector: DbConnector, config: Config, command_input: str, **kwargs):
+        super().__init__(db_connector, config)
+        self.user_id = kwargs.get("user_id")
+        self.emoji_code = command_input.lower()
+
+    @property
+    def is_restricted(self):
+        return False
+
+    def run(self):
+        try:
+            assert self.user_id, "Could not get user_id"
+            assert self.emoji_code, (
+                "Please provide an emoji code after !setemoji. "
+                "You can find the full list here: https://github.com/willmcgugan/rich/blob/master/rich/_emoji_codes.py"
+            )
+            assert self.emoji_code in list(EMOJI.keys()), (
+                "This emoji is invalid. Please choose one from this list: "
+                "https://github.com/willmcgugan/rich/blob/master/rich/_emoji_codes.py"
+            )
+            self.db_connector.update_user_emoji(user_id=self.user_id, user_emoji=self.emoji_code)
+        except AssertionError as e:
+            return e
+
+
 class TextCommand(BaseCommand):
     def __init__(self, db_connector: DbConnector, config: Config, **kwargs):
         super().__init__(db_connector, config)
@@ -398,6 +425,7 @@ SPECIAL_COMMANDS: Dict[str, Type[BaseCommand]] = {
     "commands": ListCommandsCommand,
     "uptime": UptimeCommand,
     "setcountry": SetUserCountryCommand,
+    "setemoji": SetUserEmojiCommand,
     "set": SetTextCommand,
     "add": AddTextCommand,
     "remove": RemoveTextCommand,
