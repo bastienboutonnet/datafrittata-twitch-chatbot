@@ -51,6 +51,7 @@ class DbConnector:
             Column("country", String()),
             Column("first_chatted_at", DateTime()),
             Column("zodiac_sign", String()),
+            Column("emoji", String()),
         )
 
         self.aliases = Table(
@@ -116,6 +117,28 @@ class DbConnector:
         except Exception as e:
             logging.error(f"Could not update user country: {e}")
         return
+
+    def update_user_emoji(self, user_id: str, user_emoji: str) -> None:
+        try:
+            stmt = (
+                update(self.users).where(self.users.c.user_id == user_id).values(emoji=user_emoji)
+            )
+            self.conn = self.engine.connect()
+            self.conn.execute(stmt)
+        except Exception as e:
+            logging.error(f"Could not update user emoji: {e}")
+        return
+
+    def get_user_emoji(self, user_id: str) -> Optional[str]:
+        stmt = select(self.users.c.emoji).where(self.users.c.user_id == user_id)
+        self.conn = self.engine.connect()
+        result = self.conn.execute(stmt)
+        if result:
+            row = result.fetchone()
+            if row:
+                return row[0]
+        else:
+            return None
 
     def get_user_country(self, user_id: str) -> Optional[str]:
         stmt = select(self.users.c.country).where(self.users.c.user_id == user_id)

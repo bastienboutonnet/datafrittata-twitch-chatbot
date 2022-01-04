@@ -118,12 +118,23 @@ class Bot(irc.bot.SingleServerIRCBot):
         else:
             user_country_emoji = ""
 
+        # do the user emoji thingie
+        user_emoji = self.db_connector.get_user_emoji(user_id=user_id)
+        if user_emoji:
+            user_emoji.strip(":")
+            if user_emoji in list(EMOJI.keys()):
+                user_emoji = f":{user_emoji}: "
+            else:
+                user_emoji = ""
+        else:
+            user_emoji = ""
+
         # printing to the terminal stuff
         if not user_colour:
             user_colour = "#fff44f"
         console.print(
             f"{badges_str}[{user_colour}][bold]{user_name}[/bold][/{user_colour}] "
-            f"{user_country_emoji}: "
+            f"{user_country_emoji}{user_emoji}:"
             f"[#00BFFF]{message_text}[/#00BFFF]"
         )
         # attempt to add the uer to the database.
