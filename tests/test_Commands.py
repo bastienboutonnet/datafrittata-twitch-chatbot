@@ -218,7 +218,7 @@ def test_UptimeCommand(datafiles, mock_response, time_offset, expectation, freez
         pytest.param(
             {"data": [{"display_name": "DataFrittata", "broadcaster_login": "datafrittata"}]},
             "DataFritat",
-            "DataFritat is not a valid user",
+            "DataFritat is not a valid user. Or could not be found",
             id="is not a valid user",
         ),
     ],
