@@ -237,6 +237,21 @@ class SetUserEmojiCommand(BaseCommand):
             return e
 
 
+class ListEmojisCommand(BaseCommand):
+    def __init__(self, db_connector: DbConnector, config: Config, **kwargs):
+        self.message = (
+            "You can find the list of supported emojis here: "
+            "https://github.com/willmcgugan/rich/blob/master/rich/_emoji_codes.py"
+        )
+
+    @property
+    def is_restricted(self):
+        return False
+
+    def run(self):
+        return self.message
+
+
 class TextCommand(BaseCommand):
     def __init__(self, db_connector: DbConnector, config: Config, **kwargs):
         super().__init__(db_connector, config)
@@ -426,6 +441,7 @@ SPECIAL_COMMANDS: Dict[str, Type[BaseCommand]] = {
     "uptime": UptimeCommand,
     "setcountry": SetUserCountryCommand,
     "setemoji": SetUserEmojiCommand,
+    "listemojis": ListEmojisCommand,
     "set": SetTextCommand,
     "add": AddTextCommand,
     "remove": RemoveTextCommand,
