@@ -4,3 +4,4 @@ python-dotenv>=0.18.0,<1.0.0
 SQLAlchemy>=1.4.21,<2.0.0
 httpx>=0.18.2,<1.0.0
 python-dateutil
+pydantic>=2.4.0 # not directly required, pinned by Snyk to avoid a vulnerability
